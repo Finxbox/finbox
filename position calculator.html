@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/font-awesome.css" />
+    <link rel="stylesheet" href="css/bootstrap.css" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="icon" href="../images/favicon.png 1.png" />
+    <title>FinxBox - Financial Tools</title>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+      <div class="container">
+        <a href="../index.html" class="navbar-brand"
+          ><img
+            src="../images/favicon.png 1.png"
+            alt="Logo"
+            class="img-fluid site-logo"
+          />&nbsp;&nbsp;<span class="text-white fs-4 fw-bold">FinxBox</span>
+        </a>
+        <button
+          class="navbar-toggler mt-4"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNavDropdown"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item me-5">
+              <a href="portfollio allocation.html" class="nav-link fw-bold"
+                >Portfolio Allocation</a
+              >
+            </li>
+            <li class="nav-item me-5">
+              <a href="position calculator.html" class="nav-link fw-bold"
+                >Position size calculator</a
+              >
+            </li>
+            <li class="nav-item me-5">
+              <a href="Store.html" class="nav-link fw-bold">Store</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!--  Tool 2 -->
+
+    <div class="calculator container text-center mt-6">
+      <h2 class="text-primary text-start">Position Size Calculator</h2>
+      <div class="form-group my-3">
+        <label for="entryPrice" class="form-label">Entry Price</label>
+        <input
+          type="number"
+          id="entryPrice"
+          class="form-control"
+          placeholder="Enter Entry Price"
+        />
+      </div>
+      <div class="form-group my-3">
+        <label for="stopLoss" class="form-label">Stop Loss</label>
+        <input
+          type="number"
+          id="stopLoss"
+          class="form-control"
+          placeholder="Enter Stop Loss"
+        />
+      </div>
+      <div class="form-group my-3">
+        <label for="targetPrice" class="form-label">Target Price</label>
+        <input
+          type="number"
+          id="targetPrice"
+          class="form-control"
+          placeholder="Enter Target Price"
+        />
+      </div>
+      <div class="form-group my-3">
+        <label for="riskPercentage" class="form-label"
+          >Risk Percentage of Total Capital</label
+        >
+        <input
+          type="number"
+          id="riskPercentage"
+          class="form-control"
+          placeholder="Enter Risk Percentage"
+        />
+      </div>
+      <div class="form-group my-3">
+        <label for="totalCapital" class="form-label">Total Capital (₹)</label>
+        <input
+          type="number"
+          id="totalCapital"
+          class="form-control"
+          placeholder="Enter Total Capital"
+        />
+      </div>
+      <button class="btn btn-success w-100 my-3" onclick="calculate()">
+        Calculate
+      </button>
+      <div id="result" class="mt-4 p-3 border rounded"></div>
+    </div>
+
+    <!-- Amazon affiliate Ad -->
+
+    <div class="container bg-dark">
+      <a href="#"
+        ><img
+          src="images/Amazon/Amazon_Audible_1068x260.jpg"
+          alt="Amazon advertisement"
+          class="img-fluid rounded"
+      /></a>
+    </div>
+    <!-- footer -->
+
+    <!-- footer -->
+
+    <footer class="footer bg-dark mt-9 px-1">
+      <div class="container">
+        <div
+          class="d-flex flex-column justify-content-around flex-md-row p-2 pb-5"
+        >
+          <a href="Legal pages/privacy policy.html" class="footer-link"
+            >Privacy page</a
+          >
+          <a href="Legal pages/terms&conditions.html" class="footer-link"
+            >Terms and conditions</a
+          >
+          <a href="Legal pages/affiliate-disclosure.html" class="footer-link"
+            >Affiliate Disclosure</a
+          >
+          <a href="Legal pages/Cookie-policy.html" class="footer-link"
+            >Cookies policy</a
+          >
+          <a href="Legal pages/privacy policy.html" class="footer-link"
+            >copyrights policy</a
+          >
+        </div>
+
+        <p class="text-center text-light">
+          &copy; 2024 Intickbox | All Rights Reserved
+        </p>
+      </div>
+    </footer>
+
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/script.js"></script>
+  </body>
+</html>

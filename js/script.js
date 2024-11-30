@@ -169,14 +169,21 @@ function calculatePortfolio() {
   createPieChart(companyData);
 }
 
+let chartInstance = null; // Declare the chart instance globally
+
+// If a chart already exists, destroy it before creating a new one
+
 // Function to create a pie chart using Chart.js
 function createPieChart(companyData) {
   const ctx = document.getElementById("allocationChart").getContext("2d"); // Get the canvas context to draw on
   const labels = companyData.map((data) => data.name); // Get the labels (company names)
   const dataValues = companyData.map((data) => data.value); // Get the investment values for each company
+  if (chartInstance) {
+    chartInstance.destroy();
+  }
 
   // Create the pie chart using Chart.js
-  new Chart(ctx, {
+  chartInstance = new Chart(ctx, {
     type: "pie", // Specify the type of chart
     data: {
       labels: labels, // Set the labels for the chart

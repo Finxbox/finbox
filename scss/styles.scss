@@ -36,3 +36,28 @@
   color: var(--bs-secondary); /* Use Bootstrap variable for secondary color */
   box-shadow: 0 0.1rem 0 0 var(--bs-secondary); /* Mimics a border-bottom without shifting */
 }
+
+.disclaimer {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-items: center;
+
+  align-content: center;
+}
+
+.disclaimer span {
+  font-weight: bold;
+  text-align: center;
+  display: block;
+  opacity: 0.75;
+}
+.disclaimer p {
+  font-weight: bold;
+  text-align: center;
+  display: block;
+  opacity: 0.75;
+  font-size: 0.9rem;
+  width: 90%;
+  margin: auto;
+}

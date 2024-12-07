@@ -131,11 +131,6 @@ body {
   justify-content: space-between;
 }
 
-.section-title {
-  font-size: 2rem;
-  text-align: center;
-}
-
 .features .feature-card {
   flex: 1; /* Makes the cards flexible */
   min-height: 17.5rem; /* Ensure a consistent minimum height (17.5rem = 280px) */
@@ -177,15 +172,16 @@ body {
 }
 
 .section-title {
-  font-size: 2rem;
+  font-size: 1.6rem;
   font-weight: 600;
   color: #333;
+  text-align: center;
 }
 
 .lead {
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: #666;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .feedback-form .form-control {

@@ -1,13 +1,7 @@
 @import "bootstrap";
 
-// site logo
+//NaV BAR
 
-.site-logo {
-  width: 2.6rem;
-  border-radius: 0.6rem;
-}
-
-// Nav bar
 /* Normal state for nav-link */
 .navbar-nav .nav-link {
   color: #ffffff; /* Normal color */
@@ -61,6 +55,7 @@
   display: flex; /* Use Flexbox for navbar items */
   align-items: center; /* Vertically center the navbar items */
   justify-content: space-between; /* Distribute items across the navbar */
+  gap: 2rem;
 }
 
 // Hero section

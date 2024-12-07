@@ -40,14 +40,10 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
       <div class="container">
         <a href="../index.html" class="navbar-brand"
-          ><img
-            src="../images/favicon.png 1.png"
-            alt="Logo"
-            class="img-fluid site-logo"
-          />&nbsp;&nbsp;<span class="text-white fs-4 fw-bold">FinxBox</span>
+          ><span class="text-white fs-4 fw-bold">FinxBox</span>
         </a>
         <button
-          class="navbar-toggler mt-4"
+          class="navbar-toggler"
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#navbarNavDropdown"
@@ -56,22 +52,31 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navbarNavDropdown">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item me-5">
+          <ul class="navbar-nav text-center ms-auto gap-5">
+            <li class="nav-item">
               <a href="portfollio allocation.html" class="nav-link fw-bold"
                 >Portfolio Allocation</a
               >
             </li>
-            <li class="nav-item me-5">
+            <li class="nav-item">
               <a href="position calculator.html" class="nav-link fw-bold"
                 >Position size calculator</a
               >
             </li>
-            <li class="nav-item me-5">
+            <li class="nav-item">
               <a href="Store.html" class="nav-link fw-bold">Store</a>
             </li>
-            <li class="nav-item me-5">
-              <a href="https://finxbox.blogspot.com/" class="nav-link fw-bold">Blog</a>
+            <li class="nav-item">
+              <a href="https://finxbox.blogspot.com/" class="nav-link fw-bold"
+                >Blog</a
+              >
+            </li>
+            <li class="nav-item">
+              <a
+                href="https://forms.gle/HepfqCjUbcDEHyun7"
+                class="fw-bold nav-button"
+                >Share feedback</a
+              >
             </li>
           </ul>
         </div>
@@ -83,27 +88,84 @@
     <section class="hero">
       <div class="container">
         <div
-          class="d-flex flex-column justify-content-center align-items-center mt-9 mb-8 gap-4"
+          class="d-flex flex-column justify-content-center align-items-center mt-8 mb-6 gap-3"
         >
-          <h1 class="fw-bold text-primary display-6">
-            FinxBox - Your Finance buddy
-          </h1>
+          <h1 class="fw-bold text-primary display-6">Welcome to FinxBox</h1>
           <p class="lead fw-bold opacity-75">
-            Are you struggling with your money management - Make informed
-            decisions using our tools
+            Optimize your investment portfolio with ease
           </p>
+          <img
+            src="images/portfolio allocation screnshot.png"
+            class="img-fluid rounded-4 hero-img"
+          />
           <a
             href="portfollio allocation.html"
-            class="btn btn-secondary text-light fw-bold py-2 px-5 fs-5"
-            >Start Investing</a
+            class="btn btn-primary hero-btn text-light fw-bold py-2 px-5 fs-5"
+            >Start Allocating</a
           >
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features bg-light py-5">
+      <div class="container">
+        <h2 class="text-primary mb-5 section-title">Our Features</h2>
+        <div class="row text-center">
+          <!-- Feature 1 -->
+          <div class="col-md-4 mb-4">
+            <div class="feature-card p-4 bg-white shadow-sm rounded">
+              <i
+                class="bi bi-gear-fill feature-icon mb-3"
+                style="font-size: 40px"
+              ></i>
+              <h4 class="feature-title">Advanced Tools</h4>
+              <p class="feature-description">
+                Our platform provides advanced tools to help you manage and
+                optimize your portfolio.
+              </p>
+            </div>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="col-md-4 mb-4">
+            <div class="feature-card p-4 bg-white shadow-sm rounded">
+              <i
+                class="bi bi-book feature-icon mb-3"
+                style="font-size: 40px"
+              ></i>
+              <h4 class="feature-title">
+                Best Collection of Finance Books and Resources
+              </h4>
+              <p class="feature-description">
+                Explore our curated collection of the best finance books and
+                resources to expand your knowledge and improve your financial
+                literacy.
+              </p>
+            </div>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="col-md-4 mb-4">
+            <div class="feature-card p-4 bg-white shadow-sm rounded">
+              <i
+                class="bi bi-person-circle feature-icon mb-3"
+                style="font-size: 40px"
+              ></i>
+              <h4 class="feature-title">User-Friendly Interface</h4>
+              <p class="feature-description">
+                Our user-friendly interface makes it easy to navigate and access
+                essential features.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- Amazon affiliate Ad -->
 
-    <div class="container bg-dark">
+    <div class="container bg-dark mb-3">
       <a href="https://amzn.to/3Z5sfAL"
         ><img
           src="images/Amazon/Amazon_Audible_1068x260.jpg"
@@ -111,33 +173,103 @@
           class="img-fluid rounded"
       /></a>
     </div>
+
+    <section class="feedback-section py-5">
+      <div class="container text-center">
+        <h2 class="section-title mb-4">We Value Your Feedback</h2>
+        <p class="lead mb-4">
+          Help us improve your experience by sharing your thoughts with us!
+        </p>
+
+        <!-- Feedback Form -->
+        <form
+          action="https://formspree.io/f/xkgnandb"
+          method="post"
+          class="feedback-form"
+        >
+          <div class="mb-3">
+            <textarea
+              class="form-control"
+              id="feedback"
+              rows="4"
+              placeholder="Enter your feedback here..."
+              required
+            ></textarea>
+          </div>
+          <button type="submit" class="btn feedback-btn">
+            Submit Feedback
+          </button>
+        </form>
+      </div>
+    </section>
+
     <!-- footer -->
 
-    <footer class="footer bg-dark mt-9 px-1">
+    <footer class="footer bg-dark mt-6">
       <div class="container">
-        <div
-          class="d-flex flex-column justify-content-around flex-md-row p-2 pb-5"
-        >
-          <a href="Legal pages/privacy policy.html" class="footer-link"
-            >Privacy page</a
-          >
-          <a href="Legal pages/terms&conditions.html" class="footer-link"
-            >Terms and conditions</a
-          >
-          <a href="Legal pages/affiliate-disclosure.html" class="footer-link"
-            >Affiliate Disclosure</a
-          >
-          <a href="Legal pages/Cookie-policy.html" class="footer-link"
-            >Cookies policy</a
-          >
-          <a href="Legal pages/privacy policy.html" class="footer-link"
-            >copyrights policy</a
-          >
+        <div class="row">
+          <!-- Footer Links Column -->
+          <div class="col-md-6 mb-4">
+            <h5 class="footer-title text-light mb-3">Legal Links</h5>
+            <a
+              href="Legal pages/privacy policy.html"
+              class="footer-link text-light d-block mb-2"
+              >Privacy Policy</a
+            >
+            <a
+              href="Legal pages/terms&conditions.html"
+              class="footer-link text-light d-block mb-2"
+              >Terms & Conditions</a
+            >
+            <a
+              href="Legal pages/affiliate-disclosure.html"
+              class="footer-link text-light d-block mb-2"
+              >Affiliate Disclosure</a
+            >
+            <a
+              href="Legal pages/Cookie-policy.html"
+              class="footer-link text-light d-block mb-2"
+              >Cookies Policy</a
+            >
+            <a
+              href="Legal pages/privacy policy.html"
+              class="footer-link text-light d-block mb-2"
+              >Copyright Policy</a
+            >
+          </div>
+
+          <!-- Social Media Links Column -->
+          <div class="col-md-6 mb-4">
+            <h5 class="footer-title text-light mb-3">Follow Us</h5>
+            <ul class="list-unstyled d-flex">
+              <li>
+                <a href="#" class="social-icon text-light me-3"
+                  ><i class="fab fa-facebook-f"></i
+                ></a>
+              </li>
+              <li>
+                <a href="#" class="social-icon text-light me-3"
+                  ><i class="fab fa-twitter"></i
+                ></a>
+              </li>
+              <li>
+                <a href="#" class="social-icon text-light me-3"
+                  ><i class="fab fa-linkedin-in"></i
+                ></a>
+              </li>
+              <li>
+                <a href="#" class="social-icon text-light me-3"
+                  ><i class="fab fa-instagram"></i
+                ></a>
+              </li>
+            </ul>
+          </div>
         </div>
 
-        <p class="text-center text-light">
-          &copy; 2024 Finxbox | All Rights Reserved
-        </p>
+        <!-- Footer Copyright -->
+        <div class="footer-copy text-light mt-4">
+          <p>&copy; 2024 Finxbox | All Rights Reserved</p>
+        </div>
       </div>
     </footer>
 

@@ -1,3 +1,52 @@
+/* ====================
+   Backgrounds
+   ==================== */
+
+/* Primary Background:
+   Use #FFDFD6 (Soft Peach) for light and neutral page backgrounds 
+   to keep the interface airy and clean.
+*/
+
+/* Secondary Background:
+   Use #B692C2 (Soft Lavender) sparingly for cards, side panels, 
+   or featured sections.
+*/
+
+/* ====================
+   Headers and Navigation
+   ==================== */
+
+/* Headers and Navigation:
+   Use #694F8E (Deep Purple) as the background for the header, footer, or navigation bar.
+   Text and icons on these elements should contrast with white (#FFFFFF) or soft peach (#FFDFD6).
+*/
+
+/* ====================
+   Buttons and CTAs
+   ==================== */
+
+/* Buttons and CTAs:
+   Use #E3A5C7 (Pastel Pink) for action buttons and call-to-action sections.
+   Ensure hover states have a darker variation of #E3A5C7 to indicate interactivity.
+*/
+
+/* ====================
+   Text
+   ==================== */
+
+/* Text:
+   Use #694F8E (Deep Purple) for headings and primary text to create contrast and emphasis.
+   Use #B692C2 (Soft Lavender) for secondary text or less important content.
+*/
+
+/* ====================
+   Borders and Dividers
+   ==================== */
+
+/* Borders and Dividers:
+   Use #B692C2 (Soft Lavender) or #E3A5C7 (Pastel Pink) for subtle dividers or card borders.
+*/
+
 // Font
 $font-family-sans-serif: "open-sans", sans-serif;
 
@@ -16,17 +65,18 @@ $spacers: (
 );
 
 // colors
+// Color Palette
+$primary-color: #694f8e; // Deep Purple
+$secondary-color: #b692c2; // Soft Lavender
+$accent-color: #e3a5c7; // Pastel Pink
+$background-color: #ffdfd6; // Soft Peach
+$text-color: #212121; // Dark Neutral for contrast
 
-$primary: #6c0583;
-$secondary: #10bcee;
+$primary: #694f8e;
+$secondary: #b692c2;
 $white: #fff;
 $black: #000;
 
-// Navbar
-
-$navbar-padding-y: 1.6rem;
-
 @import "../node_modules/bootstrap/scss/bootstrap";
 
-
-
+// $primary: #6c0583;

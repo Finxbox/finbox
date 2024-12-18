@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="css/bootstrap.css" />
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="stylesheet" href="css/mediaqueries.css" />
+    <link rel="stylesheet" href="css/store.css" />
 
     <link rel="icon" href="../images/favicon.png 1.png" />
     <title>FinxBox - Financial Tools</title>
@@ -85,137 +86,15 @@
       </div>
     </nav>
 
-    <!-- Store Section -->
-    <div class="container mt-6">
-      <!-- Store Section -->
-      <div class="row g-4">
-        <!-- Card 1: Trading Chart Pattern -->
-        <div class="col-12 col-sm-6 col-md-3">
-          <div class="card h-100 shadow-sm">
-            <!-- Product Image -->
-            <img
-              src="images/tradng in pattern.jpg"
-              class="card-img-top"
-              alt="Product Image 1"
-            />
-            <!-- Card Body -->
-            <div class="card-body d-flex flex-column">
-              <!-- Card Title -->
-              <h5 class="card-title">Trading Chart Pattern</h5>
-              <!-- Card Description -->
-              <p class="card-text flex-grow-1">
-                Over 5 Lakh traders and 5000+ Coaching Institutes are using our
-                Trading Chart Pattern Book to understand Candlestick and chart
-                patterns.
-              </p>
-              <!-- Buy Now Button -->
-              <a
-                href="https://amzn.to/3Zk1nOR"
-                class="btn btn-primary w-100"
-                target="_blank"
-              >
-                Buy Now
-              </a>
-            </div>
-          </div>
-        </div>
+    <!-- Book dynamic -->
 
-        <!-- Card 2: Just Keep Buying -->
-        <div class="col-12 col-sm-6 col-md-3">
-          <div class="card h-100 shadow-sm">
-            <!-- Product Image -->
-            <img
-              src="images/just keep buying.jpg"
-              class="card-img-top"
-              alt="Product Image 2"
-            />
-            <!-- Card Body -->
-            <div class="card-body d-flex flex-column">
-              <!-- Card Title -->
-              <h5 class="card-title">Just Keep Buying</h5>
-              <!-- Card Description -->
-              <p class="card-text flex-grow-1">
-                By following the strategies revealed here, you can act smarter
-                and live richer each and every day. It's time to take the next
-                step in your wealth-building journey. It's time to Just Keep
-                Buying.
-              </p>
-              <!-- Buy Now Button -->
-              <a
-                href="https://amzn.to/3Zb2cYZ"
-                class="btn btn-primary w-100"
-                target="_blank"
-              >
-                Buy Now
-              </a>
-            </div>
-          </div>
-        </div>
+    <main>
+      <h2 class="container">Explore the best books</h2>
+      <div id="book-container" class="book-container"></div>
+      <!-- Books will be generated here -->
+    </main>
 
-        <!-- Card 3: Let's Talk About Money -->
-        <div class="col-12 col-sm-6 col-md-3">
-          <div class="card h-100 shadow-sm">
-            <!-- Product Image -->
-            <img
-              src="images/lets talk money.jpg"
-              class="card-img-top"
-              alt="Product Image 3"
-            />
-            <!-- Card Body -->
-            <div class="card-body d-flex flex-column">
-              <!-- Card Title -->
-              <h5 class="card-title">Let's Talk About Money</h5>
-              <!-- Card Description -->
-              <p class="card-text flex-grow-1">
-                Not a get-rich-quick guide, this book provides you a smarter way
-                to live your dream life, rather than stay worried about the
-                'right' investment or 'perfect' insurance.
-              </p>
-              <!-- Buy Now Button -->
-              <a
-                href="https://amzn.to/419GirM"
-                class="btn btn-primary w-100"
-                target="_blank"
-              >
-                Buy Now
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 4: Coffee Can Investing -->
-        <div class="col-12 col-sm-6 col-md-3">
-          <div class="card h-100 shadow-sm">
-            <!-- Product Image -->
-            <img
-              src="images/coffee can investing.jpg"
-              class="card-img-top"
-              alt="Product Image 4"
-            />
-            <!-- Card Body -->
-            <div class="card-body d-flex flex-column">
-              <!-- Card Title -->
-              <h5 class="card-title">Coffee Can Investing</h5>
-              <!-- Card Description -->
-              <p class="card-text flex-grow-1">
-                Saurabh Mukherjea puts his money where his mouth is. Saurabh
-                follows the Coffee Can approach to high-quality, low-risk
-                investing.
-              </p>
-              <!-- Buy Now Button -->
-              <a
-                href="https://amzn.to/3CZgPHp"
-                class="btn btn-primary w-100"
-                target="_blank"
-              >
-                Buy Now
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+    <!-- Dynamic book end -->
     <!-- Amazon affiliate Ad -->
 
     <div class="container d-flex gap-3 mt-3">
@@ -319,5 +198,6 @@
     </footer>
     <script src="js/bootstrap.bundle.min.js"></script>
     <script src="js/script.js"></script>
+    <script src="./js/store.js"></script>
   </body>
 </html>

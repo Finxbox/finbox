@@ -1,26 +1,10 @@
 [
   {
-    "title": "coffee can investing",
-    "author": " Rakshit; Uni Mukherjea, Saurabh; Ranjan",
-    "imageName": "coffee can investing.jpg",
-    "amazon_url": "https://amzn.to/3CZgPHp"
-  },
-  {
-    "title": "Just Keep Buying",
-    "author": " Nick Maggiulli",
-    "imageName": "just keep buying.jpg",
-    "amazon_url": "https://amzn.to/3Zb2cYZ"
-  },
-  {
-    "title": "Let Talk Money",
-    "author": "Monika Halan",
-    "imageName": "lets talk money.jpg",
-    "amazon_url": "https://amzn.to/419GirM"
-  },
-  {
-    "title": "The money guide",
-    "author": "Anushka Rathod",
-    "imageName": "The money guide.jpg",
-    "amazon_url": "https://amzn.to/402p4vH"
+    "s.no": 1,
+    "title": "Atomic Habits",
+    "author": "James Clear",
+    "amazon_url (global)": "https://amzn.to/4fs5Zrg",
+    "amazon_url (India)": "https://amzn.to/4gKUsUR",
+    "imageName": "Atomic habits.jpg"
   }
 ]

@@ -34,3 +34,14 @@
   </url>
 
 </urlset>
+
+<!-- blog -->
+
+<url>
+    <loc>https://finxbox.blogspot.com/</loc>
+    <lastmod>2024-12-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+</urlset>

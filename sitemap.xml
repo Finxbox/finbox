@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Homepage -->
+
   <url>
     <loc>https://www.finxbox.com/</loc>
     <lastmod>2024-12-16</lastmod>
@@ -8,7 +8,6 @@
     <priority>1.0</priority>
   </url>
 
-  <!-- Portfolio Allocation Tool -->
   <url>
     <loc>https://www.finxbox.com/portfolio-allocation.html</loc>
     <lastmod>2024-12-16</lastmod>
@@ -16,7 +15,6 @@
     <priority>0.8</priority>
   </url>
 
-  <!-- Position Size Calculator -->
   <url>
     <loc>https://www.finxbox.com/position-calculator.html</loc>
     <lastmod>2024-12-16</lastmod>
@@ -24,19 +22,14 @@
     <priority>0.8</priority>
   </url>
 
-<!-- Store -->
-
-<url>
+  <url>
     <loc>https://www.finxbox.com/store.html</loc>
     <lastmod>2024-12-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
-
-<!-- blog -->
-
-<url>
+  <url>
     <loc>https://finxbox.blogspot.com/</loc>
     <lastmod>2024-12-16</lastmod>
     <changefreq>monthly</changefreq>

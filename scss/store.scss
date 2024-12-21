@@ -1,98 +1,140 @@
-/* Basic styles for the book container and cards */
-#book-container {
+/* Global styles for body */
+body {
+  font-family: "Arial", sans-serif;
+  background-color: #f0f4f8;
   display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
   justify-content: center;
+  align-items: flex-start;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
   padding: 20px;
 }
 
-.book-card {
-  background: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  width: 250px;
-  padding: 15px;
-  text-align: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+/* Container for the book cards */
+#book-container {
+  display: grid; /* Use grid instead of flexbox for better control */
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(280px, 1fr)
+  ); /* Automatically fills the space */
+  gap: 30px;
+  justify-items: center;
+  padding: 20px;
+  width: 100%;
+  max-width: 1200px;
 }
 
+/* Styling for each individual book card */
+.book-card {
+  background-color: #ffffff;
+  border-radius: 20px;
+  width: 100%; /* Ensure card takes full space in its grid cell */
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  margin: 0 auto;
+  background-color: #fff;
+  position: relative;
+}
+
+/* Book image styling */
 .book-card img {
   width: 100%;
-  height: auto;
-  border-radius: 5px;
+  height: 350px; /* Larger height for images */
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Slight shadow on the image */
 }
 
+/* Title styling */
 .book-card h3 {
-  font-size: 16px;
+  font-size: 20px;
+  font-weight: bold;
   color: #333;
-  margin: 10px 0;
+  margin-bottom: 10px;
+  transition: color 0.3s ease;
 }
 
+/* Author styling */
 .book-card p {
   font-size: 14px;
-  color: #555;
+  color: #777;
+  margin-bottom: 20px;
+  line-height: 1.4;
 }
 
+/* Button styling */
 .book-card button {
   background-color: #007bff;
   color: white;
   border: none;
   border-radius: 5px;
-  padding: 10px 15px;
+  padding: 12px 20px;
+  font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  width: 100%;
+  margin-top: 10px;
 }
 
 .book-card button:hover {
   background-color: #0056b3;
+  transform: translateY(-3px); /* Slight hover effect */
 }
 
-/* Hover effect to make the card slightly elevate */
+/* Hover effect for the book card */
 .book-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-15px); /* Elevate the card on hover */
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15); /* Larger shadow for depth */
 }
 
 /* Responsive styles */
 @media (max-width: 1200px) {
   .book-card {
-    width: 220px; /* Slightly smaller cards for medium screens */
+    width: 250px; /* Slightly smaller cards for larger screens */
   }
 }
 
 @media (max-width: 992px) {
   .book-card {
-    width: 200px; /* Even smaller cards for tablets */
+    width: 220px; /* Smaller cards for tablets */
   }
 }
 
 @media (max-width: 768px) {
   .book-card {
-    width: 180px; /* Even smaller cards for smaller devices */
+    width: 200px; /* Even smaller cards for smaller devices */
   }
 
   #book-container {
-    gap: 15px; /* Reduced gap for smaller devices */
+    gap: 25px; /* Reduced gap for smaller devices */
   }
 }
 
 @media (max-width: 480px) {
   .book-card {
     width: 100%; /* Full-width cards on very small devices like smartphones */
-    padding: 10px;
+    padding: 15px;
   }
 
   #book-container {
-    gap: 10px; /* Smaller gap on very small screens */
+    gap: 15px; /* Smaller gap on very small screens */
   }
 
   .book-card h3 {
-    font-size: 14px; /* Smaller titles for better fit */
+    font-size: 16px; /* Adjusted font size */
   }
 
   .book-card p {
-    font-size: 12px; /* Smaller font size for description */
+    font-size: 13px; /* Smaller font size for description */
+  }
+
+  .book-card button {
+    padding: 12px 15px; /* Adjusted button padding */
+    font-size: 14px; /* Responsive button text */
   }
 }

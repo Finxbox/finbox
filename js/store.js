@@ -1,3 +1,21 @@
+// Function to fetch book cover from Google Books API using ISBN
+async function fetchBookCoverFromGoogle(isbn) {
+  const url = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`;
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.items && data.items.length > 0) {
+      const coverUrl = data.items[0].volumeInfo.imageLinks?.thumbnail;
+      return coverUrl || "https://via.placeholder.com/150"; // Return cover URL or placeholder
+    } else {
+      return "https://via.placeholder.com/150"; // If no cover found, return placeholder
+    }
+  } catch (error) {
+    console.error("Error fetching book cover from Google Books:", error);
+    return "https://via.placeholder.com/150"; // Return placeholder if error occurs
+  }
+}
+
 // Function to render the books dynamically
 async function renderBooks() {
   const container = document.getElementById("book-container");
@@ -20,13 +38,13 @@ async function renderBooks() {
   }
 
   // Render the book cards dynamically
-  books.forEach((book) => {
+  for (const book of books) {
     const bookCard = document.createElement("div");
     bookCard.classList.add("book-card");
 
-    // Construct the dynamic image path
-    const imagePath = `images/${book.imageName || "placeholder.jpg"}`;
-
+    // Get the ISBN from the book data
+    const isbn = book.isbn; // Make sure your JSON has an ISBN field
+    const imagePath = await fetchBookCoverFromGoogle(isbn); // Fetch the cover image from Google Books API
     // Determine the correct Amazon link based on the country
     const amazonUrl =
       countryCode === "IN" // If the country is India
@@ -43,7 +61,7 @@ async function renderBooks() {
 
     // Append the book card to the container
     container.appendChild(bookCard);
-  });
+  }
 }
 
 // Call the function to render books

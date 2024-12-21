@@ -1,140 +1,111 @@
-/* Global styles for body */
-body {
-  font-family: "Arial", sans-serif;
-  background-color: #f0f4f8;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  flex-direction: column;
-  min-height: 100vh;
-  margin: 0;
-  padding: 20px;
-}
-
-/* Container for the book cards */
-#book-container {
-  display: grid; /* Use grid instead of flexbox for better control */
+/* Book Container */
+.book-container {
+  display: grid;
   grid-template-columns: repeat(
     auto-fill,
-    minmax(280px, 1fr)
-  ); /* Automatically fills the space */
-  gap: 30px;
-  justify-items: center;
+    minmax(250px, 1fr)
+  ); /* Responsive grid */
+  gap: 20px;
   padding: 20px;
-  width: 100%;
-  max-width: 1200px;
-}
-
-/* Styling for each individual book card */
-.book-card {
-  background-color: #ffffff;
-  border-radius: 20px;
-  width: 100%; /* Ensure card takes full space in its grid cell */
-  padding: 20px;
-  text-align: center;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  overflow: hidden;
   margin: 0 auto;
-  background-color: #fff;
-  position: relative;
+  max-width: 1200px; /* Maximum width for better alignment */
 }
 
-/* Book image styling */
+.book-card {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Slight shadow for depth */
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
+  padding: 15px;
+}
+
+.book-card:hover {
+  transform: translateY(-5px); /* Slight lift effect */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Enhanced shadow on hover */
+}
+
 .book-card img {
   width: 100%;
-  height: 350px; /* Larger height for images */
-  object-fit: cover;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Slight shadow on the image */
+  height: auto;
+  border-radius: 8px; /* Rounded corners for the book image */
+  margin-bottom: 15px;
 }
 
-/* Title styling */
 .book-card h3 {
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: bold;
   color: #333;
   margin-bottom: 10px;
-  transition: color 0.3s ease;
 }
 
-/* Author styling */
 .book-card p {
-  font-size: 14px;
   color: #777;
+  font-size: 0.95rem;
   margin-bottom: 20px;
-  line-height: 1.4;
 }
 
-/* Button styling */
 .book-card button {
+  padding: 10px 20px;
   background-color: #007bff;
-  color: white;
+  color: #fff;
   border: none;
   border-radius: 5px;
-  padding: 12px 20px;
-  font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-  width: 100%;
-  margin-top: 10px;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: background-color 0.3s ease;
 }
 
 .book-card button:hover {
-  background-color: #0056b3;
-  transform: translateY(-3px); /* Slight hover effect */
+  background-color: #0056b3; /* Darker blue on hover */
 }
 
-/* Hover effect for the book card */
-.book-card:hover {
-  transform: translateY(-15px); /* Elevate the card on hover */
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15); /* Larger shadow for depth */
-}
-
-/* Responsive styles */
-@media (max-width: 1200px) {
-  .book-card {
-    width: 250px; /* Slightly smaller cards for larger screens */
-  }
-}
-
-@media (max-width: 992px) {
-  .book-card {
-    width: 220px; /* Smaller cards for tablets */
-  }
+.book-card button:focus {
+  outline: none;
 }
 
 @media (max-width: 768px) {
   .book-card {
-    width: 200px; /* Even smaller cards for smaller devices */
-  }
-
-  #book-container {
-    gap: 25px; /* Reduced gap for smaller devices */
-  }
-}
-
-@media (max-width: 480px) {
-  .book-card {
-    width: 100%; /* Full-width cards on very small devices like smartphones */
-    padding: 15px;
-  }
-
-  #book-container {
-    gap: 15px; /* Smaller gap on very small screens */
+    padding: 15px 10px;
   }
 
   .book-card h3 {
-    font-size: 16px; /* Adjusted font size */
+    font-size: 1.1rem; /* Slightly smaller heading on small screens */
   }
 
   .book-card p {
-    font-size: 13px; /* Smaller font size for description */
+    font-size: 0.9rem; /* Smaller text for description */
   }
 
   .book-card button {
-    padding: 12px 15px; /* Adjusted button padding */
-    font-size: 14px; /* Responsive button text */
+    font-size: 0.95rem; /* Slightly smaller button on small screens */
+    padding: 8px 16px;
+  }
+}
+
+@media (max-width: 576px) {
+  .book-container {
+    grid-template-columns: 1fr; /* Single column on very small screens */
+    padding: 10px;
+  }
+
+  .book-card {
+    padding: 10px;
+  }
+
+  .book-card h3 {
+    font-size: 1rem; /* Further reduce font size on mobile */
+  }
+
+  .book-card p {
+    font-size: 0.85rem;
+  }
+
+  .book-card button {
+    font-size: 0.9rem;
+    padding: 6px 14px;
   }
 }

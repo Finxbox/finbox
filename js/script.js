@@ -1,5 +1,8 @@
 // Add custom JavaScript here
 // Portfolio Allocation Tool Script
+if (window.location.pathname === "/index.html") {
+  window.location.replace("/");
+}
 
 // Event listener for form submission, prevents default behavior and calls calculatePortfolio function
 document

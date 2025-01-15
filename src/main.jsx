@@ -5,7 +5,16 @@ import App from "./App.jsx";
 import { BrowserRouter } from "react-router-dom";
 import { ClerkProvider } from "@clerk/clerk-react";
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const isProduction = import.meta.env.MODE === "production";
+const PUBLISHABLE_KEY = isProduction
+  ? import.meta.env.VITE_CLERK_PRODUCTION_KEY
+  : import.meta.env.VITE_CLERK_TEST_KEY;
+
+if (!PUBLISHABLE_KEY) {
+  throw new Error(
+    "Missing Clerk Publishable Key. Check your environment variables."
+  );
+}
 
 if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Publishable Key");

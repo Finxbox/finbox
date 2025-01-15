@@ -5,10 +5,7 @@ import App from "./App.jsx";
 import { BrowserRouter } from "react-router-dom";
 import { ClerkProvider } from "@clerk/clerk-react";
 
-const isProduction = import.meta.env.MODE === "production";
-const PUBLISHABLE_KEY = isProduction
-  ? import.meta.env.VITE_CLERK_PRODUCTION_KEY
-  : import.meta.env.VITE_CLERK_TEST_KEY;
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PRODUCTION_KEY;
 
 if (!PUBLISHABLE_KEY) {
   throw new Error(

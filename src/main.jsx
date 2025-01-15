@@ -5,13 +5,7 @@ import App from "./App.jsx";
 import { BrowserRouter } from "react-router-dom";
 import { ClerkProvider } from "@clerk/clerk-react";
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PRODUCTION_KEY;
-
-if (!PUBLISHABLE_KEY) {
-  throw new Error(
-    "Missing Clerk Publishable Key. Check your environment variables."
-  );
-}
+const PUBLISHABLE_KEY = "pk_live_Y2xlcmsuZmlueGJveC5jb20k";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

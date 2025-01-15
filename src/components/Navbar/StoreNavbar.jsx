@@ -71,7 +71,7 @@ const StoreNavbar = () => {
             <li>
               {user ? (
                 <div className="flex justify-center items-center gap-6">
-                  Hi, {user.firstName + " " + user.lastName}
+                  Hi, {user.firstName} {user.lastName ? user.lastName : ""}
                   <UserButton />
                 </div>
               ) : (

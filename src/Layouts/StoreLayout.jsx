@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom"; // Import Outlet for nested routes
 import StoreNavbar from "../components/Navbar/StoreNavbar";
+import Footer from "../components/Footer/Footer";
 
 const StoreLayout = () => {
   return (
@@ -9,6 +10,7 @@ const StoreLayout = () => {
       <div className="store-content">
         <Outlet />
       </div>
+      <Footer />
     </div>
   );
 };

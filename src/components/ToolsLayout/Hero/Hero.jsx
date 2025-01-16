@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 const Hero = () => {
   return (
     <div className="container mx-auto py-16 px-8">
@@ -14,9 +16,12 @@ const Hero = () => {
               investments, diversify with precision, and align with your
               financial goals effortlessly.
             </p>
-            <button className="px-6 py-2 text-white bg-NavPurple rounded-lg shadow-md w-full sm:w-3/4 md:w-6/12 mx-auto lg:mx-0 hover:bg-purple-700 transition duration-300">
+            <Link
+              to={"/portfolio-calculator"}
+              className="px-6 py-2 text-white bg-NavPurple rounded-lg shadow-md w-full sm:w-3/4 md:w-6/12 mx-auto lg:mx-0 hover:bg-purple-700 transition duration-300"
+            >
               Calculate your portfolio
-            </button>
+            </Link>
 
             <p className="text-xs text-gray-500">
               Start building a balanced portfolio and maximize your returns

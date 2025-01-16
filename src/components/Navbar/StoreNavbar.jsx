@@ -1,13 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useClerk, useUser, UserButton } from "@clerk/clerk-react"; // Import Clerk hooks
-import {
-  FaBars,
-  FaTimes,
-  FaShoppingCart,
-  FaStore,
-  FaHome,
-} from "react-icons/fa";
+import { FaBars, FaTimes, FaStore, FaHome } from "react-icons/fa";
 
 const StoreNavbar = () => {
   const { openSignIn } = useClerk(); // Hook to open the sign-in modal
@@ -47,7 +41,8 @@ const StoreNavbar = () => {
                 to="/"
                 className="flex items-center gap-2 text-NavPurple font-bold text-md hover:underline"
               >
-                <FaHome /> our Tools
+                <FaHome />
+                Our Tools
               </Link>
             </li>
             <li>
@@ -56,14 +51,6 @@ const StoreNavbar = () => {
                 className="flex items-center gap-2 text-NavPurple font-bold text-md hover:underline"
               >
                 <FaStore /> Products
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/store/cart"
-                className="flex items-center gap-2 text-NavPurple font-bold text-md hover:underline"
-              >
-                <FaShoppingCart /> Cart
               </Link>
             </li>
 

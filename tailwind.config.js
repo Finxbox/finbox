@@ -5,7 +5,6 @@ export default {
     extend: {
       colors: {
         NavPurple: "#694F8E",
-        Navbtn: "#E3A5C7",
         Loaderclr: "#E3A5C7",
       },
       fontFamily: {

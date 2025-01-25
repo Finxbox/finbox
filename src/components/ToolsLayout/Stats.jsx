@@ -22,7 +22,7 @@ const StatsCard = () => {
   return (
     <div className="container mx-auto my-6 px-4 sm:px-8 lg:px-16">
       <div className="bg-purple-50 rounded-3xl py-6">
-        <p className="text-center font-bold text-2xl md:text-3xl lg:text-4xl text-gray-800">
+        <p className="text-center font-bold text-2xl md:text-3xl lg:text-3xl  text-gray-600">
           What Research Says
         </p>
         <div className="flex justify-center items-center py-10">

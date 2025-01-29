@@ -43,7 +43,7 @@ const PositionSizeCalculator = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
+    <div className="min-h-screen flex justify-center">
       <div className="max-w-6xl w-full bg-white rounded-lg shadow-xl p-6">
         <h2 className="text-3xl font-semibold text-center text-[#694F8E] mb-6">
           Position Size Calculator
@@ -60,7 +60,6 @@ const PositionSizeCalculator = () => {
               value={accountBalance}
               onChange={handleInputChange}
               className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#694F8E]"
-              placeholder="Enter your account balance"
             />
           </div>
 
@@ -74,7 +73,6 @@ const PositionSizeCalculator = () => {
               value={riskPercent}
               onChange={handleInputChange}
               className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#694F8E]"
-              placeholder="Enter risk percentage"
             />
           </div>
 
@@ -88,7 +86,6 @@ const PositionSizeCalculator = () => {
               value={entryPrice}
               onChange={handleInputChange}
               className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#694F8E]"
-              placeholder="Enter entry price"
             />
           </div>
 
@@ -102,7 +99,6 @@ const PositionSizeCalculator = () => {
               value={stopLossPrice}
               onChange={handleInputChange}
               className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#694F8E]"
-              placeholder="Enter stop loss price"
             />
           </div>
 

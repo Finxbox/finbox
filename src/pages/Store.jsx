@@ -170,6 +170,15 @@ const Store = () => {
             className="mx-auto"
           />
         </a>
+
+        <div className="flex justify-center">
+          {" "}
+          <p className="text-center text-NavPurple w-6/12  pt-10 text-md font-semibold">
+            Some links on this page are Amazon affiliate links. If you make a
+            purchase through them, I may earn a small commission at no extra
+            cost to you. Thank you for supporting, Happy shopping!
+          </p>
+        </div>
       </div>
       <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 p-10">
         {searchResult.Items.map((item) => (
@@ -193,8 +202,8 @@ const Store = () => {
                 {item.ItemInfo.Title.DisplayValue}
               </p>
 
-              <button className="bg-NavPurple px-2 mt-10 text-white rounded-lg py-2">
-                See More{" "}
+              <button className=" px-2 mt-10 bg-[#FF9900] text-white border-2 text-md font-bold hover:bg-white hover:text-[#ff9900] hover:border-2 rounded-lg py-2">
+                Buy on Amazon
               </button>
             </a>
           </li>

@@ -5,7 +5,7 @@ import App from "./App.jsx";
 import { BrowserRouter } from "react-router-dom";
 import { ClerkProvider } from "@clerk/clerk-react";
 
-const CurrentDeployment = "";
+const CurrentDeployment = "Production";
 
 const CLERK_PUBLISHABLE_KEYS = {
   production: "pk_live_Y2xlcmsuZmlueGJveC5jb20k", // Replace with actual live key

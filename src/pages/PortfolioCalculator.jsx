@@ -4,8 +4,8 @@ import Disclaimer from "../components/utility/Disclaimer";
 const PortfolioCalculator = () => {
   return (
     <>
-      <Disclaimer />
       <PortfolioCalculatorComp />
+      <Disclaimer />
     </>
   );
 };

@@ -1,6 +1,6 @@
 const Disclaimer = () => {
   const Disclaimer =
-    "Empowering you with financial insights to make informed decisions. Remember, this tool isn't a substitute for professional advice—always consult an expert before investing.";
+    "The information and tools provided on this website are for informational and educational purposes only. They should not be considered as financial, investment, or trading advice. Any decisions based on the content of this website are at your own risk. Always conduct your own research before making investment decisions";
 
   return (
     <>

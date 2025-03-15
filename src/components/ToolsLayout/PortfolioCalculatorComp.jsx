@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Ads from "../ADS/Ads";
 
 const PortfolioCalculatorComp = () => {
   const [capital, setCapital] = useState("");
@@ -107,145 +108,157 @@ const PortfolioCalculatorComp = () => {
   };
 
   return (
-    <div className="max-w-4xl min-h-screen mx-auto p-6 bg-gray-50 rounded-lg shadow-lg">
-      <h1 className="text-3xl font-semibold text-center text-[#694F8E] mb-6">
-        Portfolio Calculator
-      </h1>
+    <>
+      <div>
+        <Ads />
+      </div>
+      <div className="max-w-4xl min-h-screen mx-auto p-6 bg-gray-50 rounded-lg shadow-lg">
+        <h1 className="text-3xl font-semibold text-center text-[#694F8E] mb-6">
+          Portfolio Calculator
+        </h1>
 
-      <div className="space-y-6">
-        {/* Total Capital Input */}
-        <div className="flex flex-col">
-          <label htmlFor="capital" className="font-medium text-[#694F8E]">
-            Total Capital (₹)
-          </label>
-          <input
-            type="number"
-            id="capital"
-            className="mt-2 p-3 border border-[#694F8E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#694F8E]"
-            value={capital}
-            onChange={handleCapitalChange}
-          />
-        </div>
+        <div className="space-y-6">
+          {/* Total Capital Input */}
+          <div className="flex flex-col">
+            <label htmlFor="capital" className="font-medium text-[#694F8E]">
+              Total Capital (₹)
+            </label>
+            <input
+              type="number"
+              id="capital"
+              className="mt-2 p-3 border border-[#694F8E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#694F8E]"
+              value={capital}
+              onChange={handleCapitalChange}
+            />
+          </div>
 
-        {/* Number of Companies Input */}
-        <div className="flex flex-col">
-          <label htmlFor="num-companies" className="font-medium text-[#694F8E]">
-            Number of Companies
-          </label>
-          <input
-            type="number"
-            id="num-companies"
-            className="mt-2 p-3 border border-[#694F8E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#694F8E]"
-            onChange={handleNumCompaniesChange}
-          />
-        </div>
+          {/* Number of Companies Input */}
+          <div className="flex flex-col">
+            <label
+              htmlFor="num-companies"
+              className="font-medium text-[#694F8E]"
+            >
+              Number of Companies
+            </label>
+            <input
+              type="number"
+              id="num-companies"
+              className="mt-2 p-3 border border-[#694F8E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#694F8E]"
+              onChange={handleNumCompaniesChange}
+            />
+          </div>
 
-        {/* Company Input Fields */}
-        {assets.map((asset, index) => (
-          <div
-            key={asset.id}
-            className="border p-4 rounded-lg shadow-sm bg-[#F7F4FB] space-y-4"
-          >
-            <h3 className="font-semibold text-lg text-[#694F8E]">
-              Company {asset.id}
-            </h3>
+          {/* Company Input Fields */}
+          {assets.map((asset, index) => (
+            <div
+              key={asset.id}
+              className="border p-4 rounded-lg shadow-sm bg-[#F7F4FB] space-y-4"
+            >
+              <h3 className="font-semibold text-lg text-[#694F8E]">
+                Company {asset.id}
+              </h3>
 
-            <div className="space-y-3">
-              {/* Company Name */}
-              <div className="flex flex-col">
-                <label className="font-medium text-[#694F8E]">
-                  Company Name
-                </label>
-                <input
-                  type="text"
-                  className="mt-2 p-3 border border-[#694F8E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#694F8E]"
-                  value={asset.company}
-                  onChange={(e) => handleCompanyChange(e, index)}
-                />
-              </div>
+              <div className="space-y-3">
+                {/* Company Name */}
+                <div className="flex flex-col">
+                  <label className="font-medium text-[#694F8E]">
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    className="mt-2 p-3 border border-[#694F8E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#694F8E]"
+                    value={asset.company}
+                    onChange={(e) => handleCompanyChange(e, index)}
+                  />
+                </div>
 
-              {/* Share Price */}
-              <div className="flex flex-col">
-                <label className="font-medium text-[#694F8E]">
-                  Share Price (₹)
-                </label>
-                <input
-                  type="number"
-                  className="mt-2 p-3 border border-[#694F8E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#694F8E]"
-                  value={asset.price}
-                  onChange={(e) => handlePriceChange(e, index)}
-                />
-              </div>
+                {/* Share Price */}
+                <div className="flex flex-col">
+                  <label className="font-medium text-[#694F8E]">
+                    Share Price (₹)
+                  </label>
+                  <input
+                    type="number"
+                    className="mt-2 p-3 border border-[#694F8E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#694F8E]"
+                    value={asset.price}
+                    onChange={(e) => handlePriceChange(e, index)}
+                  />
+                </div>
 
-              {/* Asset Type */}
-              <div className="flex flex-col">
-                <label className="font-medium text-[#694F8E]">Asset Type</label>
-                <select
-                  className="mt-2 p-3 border border-[#694F8E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#694F8E]"
-                  value={asset.type}
-                  onChange={(e) => handleAssetTypeChange(e, index)}
-                >
-                  <option value="Large-cap">Large-cap</option>
-                  <option value="Mid-cap">Mid-cap</option>
-                  <option value="Small-cap">Small-cap</option>
-                  <option value="Bonds">Bonds</option>
-                  <option value="Mutual Fund">Mutual Fund</option>
-                  <option value="ETF">ETF</option>
-                </select>
+                {/* Asset Type */}
+                <div className="flex flex-col">
+                  <label className="font-medium text-[#694F8E]">
+                    Asset Type
+                  </label>
+                  <select
+                    className="mt-2 p-3 border border-[#694F8E] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#694F8E]"
+                    value={asset.type}
+                    onChange={(e) => handleAssetTypeChange(e, index)}
+                  >
+                    <option value="Large-cap">Large-cap</option>
+                    <option value="Mid-cap">Mid-cap</option>
+                    <option value="Small-cap">Small-cap</option>
+                    <option value="Bonds">Bonds</option>
+                    <option value="Mutual Fund">Mutual Fund</option>
+                    <option value="ETF">ETF</option>
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {/* Calculate Button */}
-        {assets.length > 0 && (
-          <div className="flex justify-center">
-            <button
-              className="px-6 py-3 bg-[#694F8E] text-white rounded-lg shadow-md hover:bg-[#563C70]"
-              onClick={calculatePortfolio}
-            >
-              Calculate Portfolio
-            </button>
+          {/* Calculate Button */}
+          {assets.length > 0 && (
+            <div className="flex justify-center">
+              <button
+                className="px-6 py-3 bg-[#694F8E] text-white rounded-lg shadow-md hover:bg-[#563C70]"
+                onClick={calculatePortfolio}
+              >
+                Calculate Portfolio
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Results Display */}
+        {result && (
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold text-[#694F8E]">
+              Portfolio Allocation
+            </h2>
+            <ul className="mt-4 space-y-2">
+              {result.allocations.map((alloc, idx) => (
+                <li
+                  key={idx}
+                  className="flex justify-between items-center p-3 bg-[#F7F4FB] rounded-lg"
+                >
+                  <span className="font-medium text-[#694F8E]">
+                    {alloc.companyName}
+                  </span>
+                  <span className="text-gray-600">
+                    Buy {alloc.sharesToBuy} shares (₹{" "}
+                    {alloc.investmentValue.toFixed(2)})
+                  </span>
+                </li>
+              ))}
+              {result.cashInHand > 0 && (
+                <li className="flex justify-between items-center p-3 bg-[#F7F4FB] rounded-lg">
+                  <span className="font-medium text-[#694F8E]">
+                    Cash in Hand
+                  </span>
+                  <span className="text-gray-600">
+                    ₹ {result.cashInHand.toFixed(2)}
+                  </span>
+                </li>
+              )}
+            </ul>
+            <p className="mt-4 font-semibold text-[#694F8E]">
+              Total Investment: ₹ {result.totalSharesValue.toFixed(2)}
+            </p>
           </div>
         )}
       </div>
-
-      {/* Results Display */}
-      {result && (
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold text-[#694F8E]">
-            Portfolio Allocation
-          </h2>
-          <ul className="mt-4 space-y-2">
-            {result.allocations.map((alloc, idx) => (
-              <li
-                key={idx}
-                className="flex justify-between items-center p-3 bg-[#F7F4FB] rounded-lg"
-              >
-                <span className="font-medium text-[#694F8E]">
-                  {alloc.companyName}
-                </span>
-                <span className="text-gray-600">
-                  Buy {alloc.sharesToBuy} shares (₹{" "}
-                  {alloc.investmentValue.toFixed(2)})
-                </span>
-              </li>
-            ))}
-            {result.cashInHand > 0 && (
-              <li className="flex justify-between items-center p-3 bg-[#F7F4FB] rounded-lg">
-                <span className="font-medium text-[#694F8E]">Cash in Hand</span>
-                <span className="text-gray-600">
-                  ₹ {result.cashInHand.toFixed(2)}
-                </span>
-              </li>
-            )}
-          </ul>
-          <p className="mt-4 font-semibold text-[#694F8E]">
-            Total Investment: ₹ {result.totalSharesValue.toFixed(2)}
-          </p>
-        </div>
-      )}
-    </div>
+    </>
   );
 };
 

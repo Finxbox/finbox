@@ -4,7 +4,7 @@ function Ads() {
       <div className="Ads">
         <a href="https://amzn.to/3Ec050s" target="_blank">
           <img
-            src="/prime music.jpg"
+            src="/audible.jpg"
             alt="Amazon seller banner"
             className="mx-auto"
           />

@@ -2,10 +2,10 @@ function Ads() {
   return (
     <div>
       <div className="Ads">
-        <a href="https://amzn.to/3Ec050s" target="_blank">
+        <a href="https://sites.google.com/view/learntoearn-landingpage/landing-page" target="_blank">
           <img
-            src="/Audible.jpg"
-            alt="Amazon seller banner"
+            src="/Upstoxbanner.png"
+            alt="Upstoxbanner"
             className="mx-auto w-8/12 pt-7"
           />
         </a>

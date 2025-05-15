@@ -4,8 +4,8 @@ function Ads() {
       <div className="Ads">
         <a href="https://sites.google.com/view/learntoearn-landingpage/landing-page" target="_blank">
           <img
-            src="/Upstoxbanner.png"
-            alt="Upstoxbanner"
+            src="/Audiable.png"
+            alt="Audiable"
             className="mx-auto w-8/12 pt-7"
           />
         </a>

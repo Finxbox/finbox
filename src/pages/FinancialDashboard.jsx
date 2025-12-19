@@ -1,5 +1,4 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import Ads from '../components/Ads/Ads.jsx';
 import Plot from 'react-plotly.js';
 import { 
   Upload, FileText, TrendingUp, Shield, ArrowLeft,
@@ -603,7 +602,7 @@ function FinancialDashboard() {
               </div>
             </div>
           )}
-  <Ads />
+  
           {/* Privacy Notice */}
           <div className="mt-4 flex items-center gap-3 p-4 bg-blue-50 rounded-lg border border-blue-100">
             <Shield size={20} className="text-blue-500" />

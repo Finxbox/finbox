@@ -38,6 +38,15 @@ const Navbar = () => {
           <ul className="flex flex-col lg:flex-row justify-center items-center gap-6 lg:gap-10 w-full">
             <li>
               <Link
+                to="/statement-calculator"
+                className="flex items-center gap-2 text-NavPurple font-bold text-md hover:underline"
+              >
+                <FaCalculator />
+FS ( Financial calculator
+)              </Link>
+            </li>
+            <li>
+              <Link
                 to="/portfolio-calculator"
                 className="flex items-center gap-2 text-NavPurple font-bold text-md hover:underline"
               >

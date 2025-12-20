@@ -15,6 +15,7 @@ import {
   generateBalanceSheet
 } from '../components/utility/financialUtils.jsx';
 import { processFiles } from '../components/utility/fileProcessor';
+import Ads from '../components/Ads/Ads.jsx';
 
 function FinancialDashboard() {
   const [files, setFiles] = useState([]);
@@ -609,7 +610,11 @@ function FinancialDashboard() {
             <span className="text-sm text-blue-700">
               Your data never leaves your browser. All processing happens locally.
             </span>
+           
           </div>
+           <div>
+              <Ads />
+            </div>
         </div>
 
         {/* Main Dashboard Content */}

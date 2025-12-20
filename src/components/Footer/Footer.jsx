@@ -4,6 +4,7 @@ import {
   FaInstagram,
   FaLinkedin,
   FaGithub,
+  FaYoutube,
 } from "react-icons/fa";
 
 const Footer = () => {
@@ -35,24 +36,9 @@ const Footer = () => {
 
           {/* Social Media Links */}
           <div className="flex space-x-6">
+           
             <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-300 hover:text-white transition duration-300"
-            >
-              <FaFacebook size={24} />
-            </a>
-            <a
-              href="https://twitter.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-300 hover:text-white transition duration-300"
-            >
-              <FaTwitter size={24} />
-            </a>
-            <a
-              href="https://instagram.com"
+              href="https://www.instagram.com/finxbox_offical?igsh=bHV3eXVyZzVveHcy"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-300 hover:text-white transition duration-300"
@@ -60,21 +46,14 @@ const Footer = () => {
               <FaInstagram size={24} />
             </a>
             <a
-              href="https://linkedin.com"
+              href="https://youtube.com/@finxbox?si=9n9QYx1wlHPymrD9"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-300 hover:text-white transition duration-300"
             >
-              <FaLinkedin size={24} />
+              <FaYoutube size={24} />
             </a>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-300 hover:text-white transition duration-300"
-            >
-              <FaGithub size={24} />
-            </a>
+           
           </div>
         </div>
 

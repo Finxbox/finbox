@@ -9,6 +9,10 @@ import StoreLayout from "./Layouts/StoreLayout";
 import Statementcalculator from "./pages/FinancialDashboard";
 import Store from "./pages/Store";
 import FinancialDashboard from "./pages/FinancialDashboard"; // Import new page
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsAndConditions from "./pages/TermsAndConditions";
+import CookiePolicy from "./pages/CookiePolicy";
+
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -30,11 +34,8 @@ const App = () => {
           {/* Tools layout for tool pages */}
           <Route element={<ToolsLayout />}>
             <Route path="/" element={<Home />} />
-            <Route path="/financial-dashboard" element={<FinancialDashboard />} /> {/* Add this route */}
-            <Route
-              path="/Statement-calculator"
-              element={<Statementcalculator />}
-            />
+            <Route path="/financial-statement-generator" element={<FinancialDashboard />} /> {/* Add this route */}
+            
             <Route
               path="/portfolio-calculator"
               element={<PortfolioCalculator />}
@@ -49,6 +50,12 @@ const App = () => {
           <Route element={<StoreLayout />}>
             <Route path="/store" element={<Store />} />
           </Route>
+
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+          <Route path="/cookie-policy" element={<CookiePolicy />} />
+
+
         </Routes>
       )}
     </>

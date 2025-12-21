@@ -15,7 +15,7 @@ const Footer = () => {
           {/* Legal Pages */}
           <div className="flex flex-col md:flex-row gap-4 mb-6 md:mb-0">
             <a
-              href="/terms"
+              href="/terms-and-conditions"
               className="text-sm text-gray-300 hover:text-white transition duration-300"
             >
               Terms of Service

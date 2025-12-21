@@ -16,10 +16,24 @@ const Navbar = () => {
     <div className="container mx-auto py-6 px-8">
       {/* Navbar container */}
       <div className="flex justify-between items-center">
+        
         {/* Logo */}
-        <div className="logo text-NavPurple text-2xl font-bold">
-          <Link to="/">Finxbox</Link>
-        </div>
+       <div className="logo">
+  <Link to="/">
+    {/* Mobile logo (simplified) */}
+    <img 
+      src="logo sm.png" 
+      alt="FinXBox" 
+      className="w-24 h-auto block lg:hidden"
+    />
+    {/* Desktop logo (full) */}
+    <img 
+      src="logo.png" 
+      alt="FinXBox" 
+      className="w-40 h-auto hidden lg:block"
+    />
+  </Link>
+</div>
 
         {/* Hamburger Menu (Mobile) */}
         <button
@@ -38,17 +52,17 @@ const Navbar = () => {
           <ul className="flex flex-col lg:flex-row justify-center items-center gap-6 lg:gap-10 w-full">
             <li>
               <Link
-                to="/statement-calculator"
-                className="flex items-center gap-2 text-NavPurple font-bold text-md hover:underline"
+                to="/financial-statement-generator"
+                className="flex items-center gap-2 text-NavPurple font-bold text-sm hover:underline"
               >
                 <FaCalculator />
-FS ( Financial calculator
-)              </Link>
+                Financial Statement Generator
+              </Link>
             </li>
             <li>
               <Link
                 to="/portfolio-calculator"
-                className="flex items-center gap-2 text-NavPurple font-bold text-md hover:underline"
+                className="flex items-center gap-2 text-NavPurple font-bold text-sm hover:underline"
               >
                 <FaCalculator />
                 Portfolio Calculator
@@ -57,7 +71,7 @@ FS ( Financial calculator
             <li>
               <Link
                 to="/position-size-calculator"
-                className="flex items-center gap-2 text-NavPurple font-bold text-md hover:underline"
+                className="flex items-center gap-2 text-NavPurple font-bold text-sm hover:underline"
               >
                 <FaCalculator />
                 Position Size Calculator
@@ -66,7 +80,7 @@ FS ( Financial calculator
             <li>
               <Link
                 to="https://finxbox.blogspot.com/"
-                className="flex items-center gap-2 text-NavPurple font-bold text-md hover:underline"
+                className="flex items-center gap-2 text-NavPurple font-bold text-sm hover:underline"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -77,7 +91,7 @@ FS ( Financial calculator
             <li>
               <Link
                 to="/store"
-                className="flex items-center gap-2 text-NavPurple font-bold text-md hover:underline"
+                className="flex items-center gap-2 text-NavPurple font-bold text-sm hover:underline"
                 rel="noopener noreferrer"
               >
                 <FaStore />

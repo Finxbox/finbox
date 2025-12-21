@@ -457,18 +457,7 @@ function FinancialDashboard() {
     return (
       <div className="min-h-screen bg-gray-50 p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-4 mb-8">
-            <Link 
-              to="/" 
-              className="flex items-center gap-2 px-4 py-2 bg-white text-[#694F8E] rounded-lg shadow-sm border border-[#E8E1F2] hover:bg-gray-50 transition-colors"
-            >
-              <ArrowLeft size={18} />
-              <span>Back to Tools</span>
-            </Link>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#694F8E]">
-              Financial Dashboard
-            </h1>
-          </div>
+         
           
           <div className="flex flex-col items-center justify-center h-96">
             <Loader2 className="animate-spin text-[#694F8E] mb-4" size={48} />
@@ -484,18 +473,7 @@ function FinancialDashboard() {
     return (
       <div className="min-h-screen bg-gray-50 p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-4 mb-8">
-            <Link 
-              to="/" 
-              className="flex items-center gap-2 px-4 py-2 bg-white text-[#694F8E] rounded-lg shadow-sm border border-[#E8E1F2] hover:bg-gray-50 transition-colors"
-            >
-              <ArrowLeft size={18} />
-              <span>Back to Tools</span>
-            </Link>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#694F8E]">
-              Financial Dashboard
-            </h1>
-          </div>
+         
           
           <div className="bg-white rounded-xl shadow-md p-8 text-center">
             <div className="text-red-500 mb-4">
@@ -521,26 +499,15 @@ function FinancialDashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Navigation Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-4">
-            <Link 
-              to="/" 
-              className="flex items-center gap-2 px-4 py-2 bg-white text-[#694F8E] rounded-lg shadow-sm border border-[#E8E1F2] hover:bg-gray-50 transition-colors"
-            >
-              <ArrowLeft size={18} />
-              <span>Back to Tools</span>
-            </Link>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#694F8E]">
-              Financial Dashboard
-            </h1>
-          </div>
+          
           
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-r from-[#694F8E] to-[#8B5CF6] rounded-lg">
               <TrendingUp size={24} className="text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-800">Financial Statements Dashboard</h2>
-              <p className="text-sm text-gray-600">Upload statements to generate reports. Data stays in your browser.</p>
+              <h2 className="text-lg font-semibold text-gray-800">Financial Statement Generator</h2>
+              <p className="text-sm text-gray-600">Upload statements to generate reports.</p>
             </div>
           </div>
         </div>

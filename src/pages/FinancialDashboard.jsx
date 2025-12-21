@@ -15,7 +15,7 @@ import {
   generateBalanceSheet
 } from '../components/utility/financialUtils.jsx';
 import { processFiles } from '../components/utility/fileProcessor';
-import Ads from '../components/Ads/Ads.jsx';
+import Ads from '../components/ADS/Ads.jsx';
 
 function FinancialDashboard() {
   const [files, setFiles] = useState([]);

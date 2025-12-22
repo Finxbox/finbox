@@ -12,6 +12,7 @@ import FinancialDashboard from "./pages/FinancialDashboard"; // Import new page
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import CookiePolicy from "./pages/CookiePolicy";
+import CoursePage from "./pages/CoursePage";
 
 
 const App = () => {
@@ -49,6 +50,8 @@ const App = () => {
           {/* Store layout for store pages */}
           <Route element={<StoreLayout />}>
             <Route path="/store" element={<Store />} />
+
+            <Route path="/course" element={<CoursePage />} />
           </Route>
 
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />

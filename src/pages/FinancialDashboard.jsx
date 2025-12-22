@@ -3,7 +3,8 @@ import Plot from 'react-plotly.js';
 import { 
   Upload, FileText, TrendingUp, Shield, ArrowLeft,
   DollarSign, TrendingDown, PieChart, BarChart3,
-  Download, Loader2, Calendar, Banknote, Landmark, Wallet
+  Download, Loader2, Calendar, Banknote, Landmark, Wallet,
+  CheckCircle, AlertCircle, FileSpreadsheet
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { 
@@ -12,7 +13,8 @@ import {
   normalizeData, 
   generateIncomeStatement,
   generateCashFlowStatement,
-  generateBalanceSheet
+  generateBalanceSheet,
+  detectBankFromData
 } from '../components/utility/financialUtils.jsx';
 import { processFiles } from '../components/utility/fileProcessor';
 import Ads from '../components/ADS/Ads.jsx';
@@ -24,6 +26,8 @@ function FinancialDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [detectedBank, setDetectedBank] = useState('Unknown');
+  const [processingStats, setProcessingStats] = useState(null);
   const fileInputRef = useRef(null);
 
   // Sample data for demo
@@ -71,6 +75,11 @@ function FinancialDashboard() {
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Check if file is PDF
+  const isPDF = (file) => {
+    return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+  };
+
   // Load sample data on initial render
   useEffect(() => {
     if (files.length === 0) {
@@ -79,6 +88,13 @@ function FinancialDashboard() {
         try {
           const normalizedData = normalizeData(sampleData);
           setTransactions(normalizedData);
+          setDetectedBank('AXIS BANK');
+          setProcessingStats({
+            totalRows: normalizedData.length,
+            successfulRows: normalizedData.length,
+            failedRows: 0,
+            bankDetected: 'AXIS BANK (Sample Data)'
+          });
         } catch (err) {
           console.error('Error loading sample data:', err);
         } finally {
@@ -96,14 +112,37 @@ function FinancialDashboard() {
       
       setLoading(true);
       setError(null);
+      setProcessingStats(null);
       
       try {
+        // Process all files
         const rawData = await processFiles(files);
+        
+        // Detect bank
+        const bank = detectBankFromData(rawData);
+        setDetectedBank(bank);
+        
+        // Normalize data
         const normalizedData = normalizeData(rawData);
+        
+        // Calculate processing stats
+        const stats = {
+          totalRows: rawData.length,
+          successfulRows: normalizedData.length,
+          failedRows: rawData.length - normalizedData.length,
+          bankDetected: bank,
+          fileCount: files.length,
+          hasPDF: files.some(isPDF)
+        };
+        
+        setProcessingStats(stats);
         setTransactions(normalizedData);
+        
+        console.log('Processing complete:', stats);
+        
       } catch (err) {
         console.error('Error processing files:', err);
-        setError('Failed to process files. Please check file formats.');
+        setError(err.message || 'Failed to process files. Please check file formats.');
       } finally {
         setLoading(false);
       }
@@ -142,13 +181,13 @@ function FinancialDashboard() {
 
     const monthlyIncome = sortedMonths.map(month => 
       (byMonth.get(month) || [])
-        .filter(t => t.credit > 0 && !t.type.includes('TRANSFER'))
+        .filter(t => t.credit > 0 && !t.type.includes('TRANSFER') && !t.category.includes('Transfer'))
         .reduce((sum, t) => sum + t.credit, 0)
     );
 
     const monthlyExpense = sortedMonths.map(month => 
       (byMonth.get(month) || [])
-        .filter(t => t.debit > 0 && !t.type.includes('TRANSFER'))
+        .filter(t => t.debit > 0 && !t.type.includes('TRANSFER') && !t.category.includes('Transfer'))
         .reduce((sum, t) => sum + t.debit, 0)
     );
 
@@ -161,28 +200,86 @@ function FinancialDashboard() {
       });
     });
 
+    // Category data for pie charts
+    const incomeByCategory = new Map();
+    const expenseByCategory = new Map();
+    
+    transactions.forEach(t => {
+      if (t.credit > 0 && !t.type.includes('TRANSFER') && !t.category.includes('Transfer')) {
+        incomeByCategory.set(
+          t.category,
+          (incomeByCategory.get(t.category) || 0) + t.credit
+        );
+      }
+      if (t.debit > 0 && !t.type.includes('TRANSFER') && !t.category.includes('Transfer')) {
+        expenseByCategory.set(
+          t.category,
+          (expenseByCategory.get(t.category) || 0) + t.debit
+        );
+      }
+    });
+
     return {
       months: monthLabels,
       monthlyIncome,
-      monthlyExpense
+      monthlyExpense,
+      incomeByCategory,
+      expenseByCategory
     };
   }, [transactions, financialMetrics]);
 
-
   // Helper Components with Tailwind
-  const KPICard = ({ title, value, icon, isPositive, bgColor = "bg-[#F7F4FB]" }) => (
+  const KPICard = ({ title, value, icon, isPositive, bgColor = "bg-[#F7F4FB]", subtitle }) => (
     <div className={`${bgColor} p-6 rounded-xl shadow-md border border-[#E8E1F2] transition-all duration-300 hover:shadow-lg hover:-translate-y-1`}>
       <div className="flex items-center gap-3 mb-3">
         <div className="p-2 bg-white rounded-lg shadow-sm">
           {icon}
         </div>
-        <h4 className="font-medium text-[#694F8E] text-sm uppercase tracking-wider">
-          {title}
-        </h4>
+        <div>
+          <h4 className="font-medium text-[#694F8E] text-sm uppercase tracking-wider">
+            {title}
+          </h4>
+          {subtitle && (
+            <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
+          )}
+        </div>
       </div>
       <div className={`text-2xl font-bold ${typeof isPositive === 'boolean' ? (isPositive ? 'text-green-600' : 'text-red-600') : 'text-gray-800'}`}>
         {toINR(value)}
       </div>
+    </div>
+  );
+
+  const ProcessingStatsCard = ({ stats }) => (
+    <div className="bg-white rounded-xl shadow-sm p-6 border border-[#E8E1F2] mb-6">
+      <h3 className="text-lg font-semibold text-[#694F8E] mb-4 flex items-center gap-2">
+        <FileSpreadsheet size={20} />
+        Processing Summary
+      </h3>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="text-center p-3 bg-blue-50 rounded-lg">
+          <div className="text-2xl font-bold text-blue-600">{stats.totalRows}</div>
+          <div className="text-sm text-gray-600">Total Rows</div>
+        </div>
+        <div className="text-center p-3 bg-green-50 rounded-lg">
+          <div className="text-2xl font-bold text-green-600">{stats.successfulRows}</div>
+          <div className="text-sm text-gray-600">Processed</div>
+        </div>
+        <div className="text-center p-3 bg-red-50 rounded-lg">
+          <div className="text-2xl font-bold text-red-600">{stats.failedRows}</div>
+          <div className="text-sm text-gray-600">Skipped</div>
+        </div>
+        <div className="text-center p-3 bg-purple-50 rounded-lg">
+          <div className="text-sm font-bold text-purple-600 truncate">{stats.bankDetected}</div>
+          <div className="text-xs text-gray-600">Bank Detected</div>
+        </div>
+      </div>
+      {stats.hasPDF && (
+        <div className="mt-4 flex items-center gap-2 text-sm text-amber-600">
+          <AlertCircle size={16} />
+          <span>PDF processing may have limited accuracy</span>
+        </div>
+      )}
     </div>
   );
 
@@ -234,6 +331,11 @@ function FinancialDashboard() {
           </tbody>
         </table>
       </div>
+      {statement.incomeCount > 0 && (
+        <div className="mt-6 text-sm text-gray-600">
+          <p>Based on {statement.incomeCount} income transactions and {statement.expenseCount} expense transactions</p>
+        </div>
+      )}
     </div>
   );
 
@@ -248,18 +350,36 @@ function FinancialDashboard() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold text-[#694F8E] uppercase tracking-wider">
-                Description
+                Category
               </th>
               <th className="px-4 py-3 text-right text-xs font-semibold text-[#694F8E] uppercase tracking-wider">
                 Amount (₹)
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white">
+          <tbody className="bg-white divide-y divide-gray-200">
+            <tr>
+              <td className="px-4 py-3 text-gray-700">Operating Cash Flow</td>
+              <td className={`px-4 py-3 text-right font-mono ${cashFlow.operatingCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {toINR(cashFlow.operatingCashFlow)}
+              </td>
+            </tr>
+            <tr>
+              <td className="px-4 py-3 text-gray-700">Investing Cash Flow</td>
+              <td className={`px-4 py-3 text-right font-mono ${cashFlow.investingCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {toINR(cashFlow.investingCashFlow)}
+              </td>
+            </tr>
+            <tr>
+              <td className="px-4 py-3 text-gray-700">Financing Cash Flow</td>
+              <td className={`px-4 py-3 text-right font-mono ${cashFlow.financingCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {toINR(cashFlow.financingCashFlow)}
+              </td>
+            </tr>
             <tr className="bg-[#F7F4FB] font-bold">
-              <td className="px-4 py-4 text-[#694F8E]">Net Increase in Cash</td>
-              <td className={`px-4 py-4 text-right font-mono ${cashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {toINR(cashFlow)}
+              <td className="px-4 py-3 text-[#694F8E]">Net Cash Flow</td>
+              <td className={`px-4 py-3 text-right font-mono ${cashFlow.netCashFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {toINR(cashFlow.netCashFlow)}
               </td>
             </tr>
           </tbody>
@@ -292,11 +412,24 @@ function FinancialDashboard() {
               <td className="px-4 py-3 text-right"></td>
             </tr>
             <tr>
-              <td className="px-4 py-3 pl-8 text-gray-700">Total Assets</td>
+              <td className="px-4 py-3 pl-8 text-gray-700">Cash Balance</td>
+              <td className="px-4 py-3 text-right font-mono text-green-600">
+                {toINR(balanceSheet.cashBalance)}
+              </td>
+            </tr>
+            <tr>
+              <td className="px-4 py-3 pl-8 text-gray-700">Investments</td>
+              <td className="px-4 py-3 text-right font-mono text-green-600">
+                {toINR(balanceSheet.investments)}
+              </td>
+            </tr>
+            <tr className="bg-gray-50 font-bold">
+              <td className="px-4 py-3 text-[#694F8E]">Total Assets</td>
               <td className="px-4 py-3 text-right font-mono text-green-600">
                 {toINR(balanceSheet.totalAssets)}
               </td>
             </tr>
+            
             <tr className="bg-gray-50">
               <td className="px-4 py-3 font-semibold text-[#694F8E]">Liabilities</td>
               <td className="px-4 py-3 text-right"></td>
@@ -307,6 +440,7 @@ function FinancialDashboard() {
                 {toINR(balanceSheet.totalLiabilities)}
               </td>
             </tr>
+            
             <tr className="bg-gray-50">
               <td className="px-4 py-3 font-semibold text-[#694F8E]">Equity</td>
               <td className="px-4 py-3 text-right"></td>
@@ -317,6 +451,13 @@ function FinancialDashboard() {
                 {toINR(balanceSheet.totalEquity)}
               </td>
             </tr>
+            
+            <tr className="bg-[#F7F4FB] font-bold">
+              <td className="px-4 py-3 text-[#694F8E]">Assets = Liabilities + Equity</td>
+              <td className="px-4 py-3 text-right font-mono">
+                {toINR(balanceSheet.totalAssets)} = {toINR(balanceSheet.totalLiabilities)} + {toINR(balanceSheet.totalEquity)}
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -324,23 +465,9 @@ function FinancialDashboard() {
   );
 
   const ChartsTab = () => {
-    const incomeByCategory = new Map();
-    const expenseByCategory = new Map();
+    if (!chartData) return null;
     
-    transactions.forEach(t => {
-      if (t.credit > 0 && !t.type.includes('TRANSFER')) {
-        incomeByCategory.set(
-          t.category,
-          (incomeByCategory.get(t.category) || 0) + t.credit
-        );
-      }
-      if (t.debit > 0 && !t.type.includes('TRANSFER')) {
-        expenseByCategory.set(
-          t.category,
-          (expenseByCategory.get(t.category) || 0) + t.debit
-        );
-      }
-    });
+    const { incomeByCategory, expenseByCategory } = chartData;
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -355,11 +482,13 @@ function FinancialDashboard() {
                   type: 'pie',
                   hole: 0.4,
                   marker: { 
-                    colors: ['#8B5CF6', '#7C3AED', '#6D28D9', '#5B21B6', '#4C1D95'] 
-                  }
+                    colors: ['#8B5CF6', '#7C3AED', '#6D28D9', '#5B21B6', '#4C1D95', '#3730A3', '#312E81', '#1E1B4B'] 
+                  },
+                  textinfo: 'label+percent',
+                  textposition: 'outside'
                 }]}
                 layout={{
-                  margin: { t: 10, l: 20, r: 20, b: 20 },
+                  margin: { t: 30, l: 20, r: 20, b: 40 },
                   paper_bgcolor: 'transparent',
                   plot_bgcolor: 'transparent',
                   font: { family: 'Inter, system-ui, sans-serif', color: '#374151' },
@@ -369,7 +498,8 @@ function FinancialDashboard() {
                     y: -0.1,
                     x: 0.5,
                     xanchor: 'center'
-                  }
+                  },
+                  height: 320
                 }}
                 config={{ 
                   displayModeBar: true, 
@@ -397,11 +527,13 @@ function FinancialDashboard() {
                   type: 'pie',
                   hole: 0.4,
                   marker: { 
-                    colors: ['#EC4899', '#DB2777', '#BE185D', '#9D174D', '#831843'] 
-                  }
+                    colors: ['#EC4899', '#DB2777', '#BE185D', '#9D174D', '#831843', '#6B21A8', '#5B21B6', '#4C1D95'] 
+                  },
+                  textinfo: 'label+percent',
+                  textposition: 'outside'
                 }]}
                 layout={{
-                  margin: { t: 10, l: 20, r: 20, b: 20 },
+                  margin: { t: 30, l: 20, r: 20, b: 40 },
                   paper_bgcolor: 'transparent',
                   plot_bgcolor: 'transparent',
                   font: { family: 'Inter, system-ui, sans-serif', color: '#374151' },
@@ -411,7 +543,8 @@ function FinancialDashboard() {
                     y: -0.1,
                     x: 0.5,
                     xanchor: 'center'
-                  }
+                  },
+                  height: 320
                 }}
                 config={{ 
                   displayModeBar: true, 
@@ -443,7 +576,44 @@ function FinancialDashboard() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'financial-data.json';
+    a.download = `financial-data-${detectedBank.toLowerCase().replace(/\s+/g, '-')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
+  };
+
+  // Download data as CSV
+  const downloadDataCSV = () => {
+    if (transactions.length === 0) {
+      alert('No data available to download');
+      return;
+    }
+    
+    const headers = ['Date', 'Month', 'Particulars', 'Debit', 'Credit', 'Type', 'Category', 'Bank', 'ProcessedDate'];
+    const csvRows = [
+      headers.join(','),
+      ...transactions.map(t => [
+        t.date,
+        t.month,
+        `"${t.particulars.replace(/"/g, '""')}"`,
+        t.debit,
+        t.credit,
+        t.type,
+        t.category,
+        t.bank,
+        new Date().toISOString().split('T')[0]
+      ].join(','))
+    ];
+    
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `financial-data-${detectedBank.toLowerCase().replace(/\s+/g, '-')}.csv`;
     document.body.appendChild(a);
     a.click();
     setTimeout(() => {
@@ -457,11 +627,12 @@ function FinancialDashboard() {
     return (
       <div className="min-h-screen bg-gray-50 p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
-         
-          
           <div className="flex flex-col items-center justify-center h-96">
             <Loader2 className="animate-spin text-[#694F8E] mb-4" size={48} />
             <p className="text-gray-600">Processing financial data...</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Analyzing {files.length} file(s)...
+            </p>
           </div>
         </div>
       </div>
@@ -473,21 +644,38 @@ function FinancialDashboard() {
     return (
       <div className="min-h-screen bg-gray-50 p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
-         
-          
           <div className="bg-white rounded-xl shadow-md p-8 text-center">
             <div className="text-red-500 mb-4">
-              <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <AlertCircle size={64} className="mx-auto" />
             </div>
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">Processing Error</h3>
             <p className="text-lg text-gray-700 mb-6">{error}</p>
-            <button 
-              className="px-6 py-3 bg-[#694F8E] text-white rounded-lg shadow-md hover:bg-[#563C70] transition-colors"
-              onClick={() => window.location.reload()}
-            >
-              Try Again
-            </button>
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg text-left">
+              <p className="font-medium mb-2">Common solutions:</p>
+              <ul className="text-sm text-gray-600 list-disc list-inside">
+                <li>Ensure the file is a valid bank statement (CSV, Excel, JSON)</li>
+                <li>Check if the file contains transaction data</li>
+                <li>Try removing special characters from file names</li>
+                <li>For PDFs: Ensure they are text-based (not scanned)</li>
+              </ul>
+            </div>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <button 
+                className="px-6 py-3 bg-[#694F8E] text-white rounded-lg shadow-md hover:bg-[#563C70] transition-colors"
+                onClick={() => window.location.reload()}
+              >
+                Reload Page
+              </button>
+              <button 
+                className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg shadow-md hover:bg-gray-300 transition-colors"
+                onClick={() => {
+                  setFiles([]);
+                  setError(null);
+                }}
+              >
+                Try Different Files
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -499,15 +687,13 @@ function FinancialDashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Navigation Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          
-          
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-r from-[#694F8E] to-[#8B5CF6] rounded-lg">
               <TrendingUp size={24} className="text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-800">Financial Statement Generator</h2>
-              <p className="text-sm text-gray-600">Upload statements to generate reports.</p>
+              <h2 className="text-lg font-semibold text-gray-800">Universal Financial Statement Generator</h2>
+              <p className="text-sm text-gray-600">Works with ALL bank statements - HDFC, ICICI, SBI, Axis, and more</p>
             </div>
           </div>
         </div>
@@ -522,20 +708,30 @@ function FinancialDashboard() {
             onClick={() => fileInputRef.current?.click()}
           >
             <Upload size={56} className={`mx-auto mb-4 ${isDragging ? 'text-[#694F8E]' : 'text-gray-400'}`} />
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">Upload Financial Documents</h3>
-            <p className="text-gray-600 mb-3">Drag & drop or click to upload bank statements, credit card statements, or other financial documents</p>
-            <p className="text-sm text-gray-500 mb-4">Supported formats: JSON, CSV, XLSX, XLS</p>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">Upload ANY Bank Statement</h3>
+            <p className="text-gray-600 mb-3">Drag & drop or click to upload statements from any Indian bank</p>
+            <p className="text-sm text-gray-500 mb-4">Supported: CSV, Excel, JSON (HDFC, ICICI, SBI, Axis, Kotak, etc.)</p>
+            
+            <div className="flex flex-wrap justify-center gap-2 mb-4">
+              <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">✓ HDFC</span>
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">✓ ICICI</span>
+              <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">✓ SBI</span>
+              <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">✓ Axis</span>
+              <span className="px-2 py-1 bg-pink-100 text-pink-800 rounded-full text-xs">✓ Kotak</span>
+              <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs">✓ All Formats</span>
+            </div>
             
             <input
               ref={fileInputRef}
               type="file"
-              accept=".json,.csv,.xlsx,.xls"
+              accept=".json,.csv,.xlsx,.xls,.pdf"
               multiple
               onChange={handleFileSelect}
               className="hidden"
             />
             
-            <button className="px-6 py-2 bg-[#694F8E] text-white rounded-lg hover:bg-[#563C70] transition-colors">
+            <button className="px-6 py-2 bg-[#694F8E] text-white rounded-lg hover:bg-[#563C70] transition-colors flex items-center gap-2 mx-auto">
+              <Upload size={18} />
               Select Files
             </button>
           </div>
@@ -545,28 +741,40 @@ function FinancialDashboard() {
             <div className="mt-6 bg-white rounded-xl shadow-sm p-6 border border-[#E8E1F2]">
               <h4 className="font-semibold text-[#694F8E] mb-4">Uploaded Files ({files.length})</h4>
               <div className="space-y-3">
-                {files.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <FileText size={18} className="text-[#694F8E]" />
-                      <div>
-                        <span className="font-medium text-gray-800">{file.name}</span>
-                        <span className="text-sm text-gray-500 ml-3">
-                          ({Math.round(file.size / 1024)} KB)
-                        </span>
+                {files.map((file, index) => {
+                  const isPdfFile = isPDF(file);
+                  return (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        {isPdfFile ? (
+                          <FileText size={18} className="text-red-500" />
+                        ) : (
+                          <FileText size={18} className="text-[#694F8E]" />
+                        )}
+                        <div>
+                          <span className="font-medium text-gray-800">{file.name}</span>
+                          <span className="text-sm text-gray-500 ml-3">
+                            ({Math.round(file.size / 1024)} KB)
+                          </span>
+                          {isPdfFile && (
+                            <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-800 text-xs rounded-full">
+                              PDF
+                            </span>
+                          )}
+                        </div>
                       </div>
+                      <button 
+                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFile(index);
+                        }}
+                      >
+                        ×
+                      </button>
                     </div>
-                    <button 
-                      className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeFile(index);
-                      }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -577,11 +785,12 @@ function FinancialDashboard() {
             <span className="text-sm text-blue-700">
               Your data never leaves your browser. All processing happens locally.
             </span>
-           
           </div>
-           <div>
-              <Ads />
-            </div>
+          
+          {/* Ads */}
+          <div className="mt-4">
+            <Ads />
+          </div>
         </div>
 
         {/* Main Dashboard Content */}
@@ -589,10 +798,44 @@ function FinancialDashboard() {
           <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-[#E8E1F2]">
             <FileText size={64} className="mx-auto text-gray-400 mb-4" />
             <h3 className="text-xl font-semibold text-gray-800 mb-2">No Financial Data</h3>
-            <p className="text-gray-600">Upload financial statements to see your dashboard</p>
+            <p className="text-gray-600 mb-6">Upload bank statements to generate financial reports</p>
+            <div className="max-w-2xl mx-auto text-left">
+              <h4 className="font-medium text-gray-700 mb-2">Supported Bank Formats:</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  <span>HDFC Bank</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  <span>ICICI Bank</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  <span>State Bank of India</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  <span>Axis Bank</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  <span>Kotak Mahindra</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-green-500" />
+                  <span>Yes Bank</span>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="space-y-8">
+            {/* Processing Stats */}
+            {processingStats && (
+              <ProcessingStatsCard stats={processingStats} />
+            )}
+
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <KPICard 
@@ -600,6 +843,7 @@ function FinancialDashboard() {
                 value={financialMetrics?.incomeStatement.totalIncome || 0}
                 icon={<DollarSign size={20} className="text-green-600" />}
                 isPositive={true}
+                subtitle={`${financialMetrics?.incomeStatement.incomeCount || 0} transactions`}
               />
               
               <KPICard 
@@ -607,6 +851,7 @@ function FinancialDashboard() {
                 value={financialMetrics?.incomeStatement.totalExpenses || 0}
                 icon={<TrendingDown size={20} className="text-red-600" />}
                 bgColor="bg-red-50"
+                subtitle={`${financialMetrics?.incomeStatement.expenseCount || 0} transactions`}
               />
               
               <KPICard 
@@ -615,6 +860,7 @@ function FinancialDashboard() {
                 icon={<TrendingUp size={20} className={financialMetrics?.incomeStatement.netIncome >= 0 ? 'text-green-600' : 'text-red-600'} />}
                 isPositive={financialMetrics?.incomeStatement.netIncome >= 0}
                 bgColor={financialMetrics?.incomeStatement.netIncome >= 0 ? "bg-green-50" : "bg-red-50"}
+                subtitle="Profit/Loss"
               />
               
               <KPICard 
@@ -622,6 +868,7 @@ function FinancialDashboard() {
                 value={financialMetrics?.balanceSheet.totalAssets || 0}
                 icon={<PieChart size={20} className="text-blue-600" />}
                 bgColor="bg-blue-50"
+                subtitle="Total worth"
               />
             </div>
 
@@ -671,7 +918,7 @@ function FinancialDashboard() {
                   <div className="bg-white rounded-xl shadow-md p-6 border border-[#E8E1F2]">
                     <h3 className="text-lg font-semibold text-[#694F8E] mb-4 flex items-center gap-2">
                       <Calendar size={18} />
-                      Monthly Cash Flow
+                      Monthly Cash Flow (Last 6 Months)
                     </h3>
                     {chartData && chartData.months.length > 0 ? (
                       <div className="h-80">
@@ -699,7 +946,9 @@ function FinancialDashboard() {
                             plot_bgcolor: 'transparent',
                             font: { family: 'Inter, system-ui, sans-serif', color: '#374151' },
                             showlegend: true,
-                            legend: { x: 0, y: 1.2 }
+                            legend: { x: 0, y: 1.2 },
+                            xaxis: { title: 'Month' },
+                            yaxis: { title: 'Amount (₹)' }
                           }}
                           config={{ 
                             displayModeBar: true, 
@@ -722,19 +971,33 @@ function FinancialDashboard() {
                     <div className="space-y-3">
                       {transactions.slice(-5).reverse().map((t, i) => (
                         <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                          <div>
+                          <div className="flex-1 min-w-0">
                             <div className="text-sm text-gray-500">
                               {t._dt ? t._dt.toLocaleDateString() : t.date}
                             </div>
-                            <div className="font-medium text-gray-800 truncate max-w-xs">
+                            <div className="font-medium text-gray-800 truncate">
                               {t.particulars}
                             </div>
+                            <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                              <span className="px-2 py-0.5 bg-gray-100 rounded">{t.category}</span>
+                              <span>•</span>
+                              <span>{t.bank}</span>
+                            </div>
                           </div>
-                          <div className={`font-mono font-semibold ${t.credit > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          <div className={`font-mono font-semibold whitespace-nowrap ml-4 ${t.credit > 0 ? 'text-green-600' : 'text-red-600'}`}>
                             {toINR(t.credit > 0 ? t.credit : -t.debit)}
                           </div>
                         </div>
                       ))}
+                    </div>
+                    <div className="mt-4 text-center">
+                      <Link 
+                        to="#" 
+                        className="text-sm text-[#694F8E] hover:underline"
+                        onClick={() => alert('Full transaction list coming soon!')}
+                      >
+                        View all {transactions.length} transactions →
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -764,14 +1027,32 @@ function FinancialDashboard() {
                 onClick={downloadDataJSON}
               >
                 <Download size={18} />
-                Export Data
+                Export as JSON
+              </button>
+              <button 
+                className="flex items-center gap-2 px-6 py-3 bg-white text-[#694F8E] rounded-lg shadow-sm border border-[#694F8E] hover:bg-gray-50 transition-colors"
+                onClick={downloadDataCSV}
+              >
+                <Download size={18} />
+                Export as CSV
               </button>
               <button 
                 className="flex items-center gap-2 px-6 py-3 bg-[#694F8E] text-white rounded-lg shadow-md hover:bg-[#563C70] transition-colors"
-                onClick={() => alert('Report download feature coming soon!')}
+                onClick={() => alert('PDF report download feature coming soon!')}
               >
                 <Download size={18} />
-                Download Report
+                Download PDF Report
+              </button>
+              <button 
+                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition-colors"
+                onClick={() => {
+                  setFiles([]);
+                  setTransactions([]);
+                  setProcessingStats(null);
+                }}
+              >
+                <Upload size={18} />
+                Analyze New File
               </button>
             </div>
           </div>

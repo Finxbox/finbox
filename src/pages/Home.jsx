@@ -1,14 +1,221 @@
-import Hero from "../components/ToolsLayout/Hero/Hero";
-import StatsCard from "../components/ToolsLayout/Stats";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { ShieldCheck, BarChart3, GraduationCap } from "lucide-react";
+
+/* ================= ANIMATION VARIANTS ================= */
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0 },
+};
+
+const stagger = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.15 },
+  },
+};
 
 const Home = () => {
   return (
-    <>
-      {/* Only render the content for the home page */}
-      <Hero />
-      <StatsCard />
-    </>
+    <div className="bg-[#FAFAFB]">
+
+      {/* ================= HERO ================= */}
+     {/* ================= HERO (CENTERED / TEXT-FIRST) ================= */}
+<section className="relative overflow-hidden">
+  <div className="absolute inset-0 bg-gradient-to-b from-[#F1ECFA] via-white to-[#FAFAFB]" />
+
+  <motion.div
+    className="relative max-w-4xl mx-auto px-6 md:px-8 py-32 text-center"
+    initial="hidden"
+    animate="visible"
+    variants={fadeUp}
+  >
+    <span className="inline-block text-xs font-semibold tracking-wide text-[#694F8E] bg-[#EDE7F6] px-4 py-1.5 rounded-full mb-6">
+      Financial Tools & Market Education
+    </span>
+
+    <h1 className="text-5xl md:text-6xl font-semibold text-gray-900 leading-tight">
+      Better Financial Decisions <br />
+      Are Built on <span className="text-[#694F8E]">Structure</span>
+    </h1>
+
+    <p className="mt-8 text-lg text-gray-600 max-w-2xl mx-auto">
+      Finxbox helps investors and traders eliminate guesswork using
+      disciplined tools, risk frameworks, and evidence-based market education —
+      designed specifically for Indian markets.
+    </p>
+
+    <div className="mt-10 flex justify-center gap-4 flex-wrap">
+      <Link
+        to="/portfolio-calculator"
+        className="px-8 py-4 bg-[#694F8E] text-white rounded-xl shadow hover:scale-[1.03] transition"
+      >
+        Use Free Financial Tools
+      </Link>
+
+      <Link
+        to="/course"
+        className="px-8 py-4 bg-white border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition"
+      >
+        Learn the Framework
+      </Link>
+    </div>
+
+    <p className="mt-8 text-xs text-gray-500">
+      No sign-up required · Risk-aware · Built for long-term thinking
+    </p>
+  </motion.div>
+</section>
+
+
+      {/* ================= STATS ================= */}
+      <section className="relative -mt-24">
+        <motion.div
+          className="max-w-6xl mx-auto bg-white rounded-3xl shadow-xl border border-gray-200 px-10 py-14"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={stagger}
+        >
+          <p className="text-xs uppercase tracking-wider text-gray-500 text-center mb-12">
+            Platform at a glance
+          </p>
+
+          <div className="grid sm:grid-cols-3 gap-12">
+            <StatCard
+              icon={<BarChart3 size={28} />}
+              value="₹0"
+              label="Free Financial Tools"
+              description="No paywalls. No trials."
+              accent="bg-[#EDE7F6] text-[#694F8E]"
+            />
+            <StatCard
+              icon={<ShieldCheck size={28} />}
+              value="Risk-First"
+              label="Decision Framework"
+              description="Capital preservation first."
+              accent="bg-[#F1F5F9] text-gray-800"
+            />
+            <StatCard
+              icon={<GraduationCap size={28} />}
+              value="Beginner → Pro"
+              label="Learning Path"
+              description="Structured progression."
+              accent="bg-[#F8FAFC] text-gray-800"
+            />
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ================= CORE TOOLS ================= */}
+<section className="max-w-7xl mx-auto px-6 md:px-8 py-32">
+  <div className="grid lg:grid-cols-2 gap-20 items-start">
+
+    <motion.div
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={fadeUp}
+    >
+      <h2 className="text-4xl font-semibold text-gray-900">
+        Tools Built for Capital Protection
+      </h2>
+      <p className="mt-4 text-gray-600 max-w-lg">
+        Every tool prioritizes risk control before returns.
+      </p>
+    </motion.div>
+
+    <div className="grid gap-6">
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={stagger}
+      >
+        <motion.div variants={fadeUp}>
+          <FeatureCard title="Portfolio Calculator" />
+        </motion.div>
+
+        <motion.div variants={fadeUp}>
+          <FeatureCard title="Position Size Calculator" />
+        </motion.div>
+
+        <motion.div variants={fadeUp}>
+          <FeatureCard title="Financial Statement Generator" />
+        </motion.div>
+      </motion.div>
+    </div>
+
+  </div>
+</section>
+
+
+      {/* ================= EDUCATION ================= */}
+<section className="bg-gray-900 text-white">
+  <div className="max-w-7xl mx-auto px-6 md:px-8 py-32 grid lg:grid-cols-2 gap-20 items-center">
+
+    <motion.div
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={fadeUp}
+    >
+      <h2 className="text-4xl font-semibold">
+        Education That Teaches Discipline
+      </h2>
+      <p className="mt-5 text-gray-300 max-w-lg">
+        No tips. No signals. Just structure.
+      </p>
+    </motion.div>
+
+    <motion.div
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      variants={fadeUp}
+      className="bg-gray-800 rounded-2xl p-10 border border-gray-700"
+    >
+      <ul className="space-y-4 text-gray-300">
+        <li>✔ Risk-first mindset</li>
+        <li>✔ Price-action mastery</li>
+        <li>✔ Rule-based execution</li>
+      </ul>
+    </motion.div>
+
+  </div>
+</section>
+
+
+    </div>
   );
 };
+
+/* ================= SUB COMPONENTS ================= */
+
+const StatCard = ({ icon, value, label, description, accent }) => (
+  <motion.div
+    variants={fadeUp}
+    whileHover={{ y: -4 }}
+    className="flex flex-col gap-5"
+  >
+    <div className={`p-3 rounded-xl w-fit ${accent}`}>
+      {icon}
+    </div>
+    <p className="text-4xl font-semibold text-gray-900">{value}</p>
+    <p className="text-sm font-medium">{label}</p>
+    <p className="text-sm text-gray-600">{description}</p>
+  </motion.div>
+);
+
+const FeatureCard = ({ title }) => (
+  <motion.div
+    variants={fadeUp}
+    whileHover={{ y: -6 }}
+    className="bg-white border border-gray-200 rounded-2xl p-7 shadow hover:shadow-lg transition"
+  >
+    <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+  </motion.div>
+);
 
 export default Home;

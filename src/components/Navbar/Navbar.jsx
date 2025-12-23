@@ -1,122 +1,181 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useClerk, useUser, UserButton } from "@clerk/clerk-react";
-import { FaBars, FaTimes, FaCalculator, FaBlog, FaStore } from "react-icons/fa";
+import { ChevronDown } from "lucide-react";
+import { FaBars, FaTimes } from "react-icons/fa";
 
 const Navbar = () => {
   const { openSignIn } = useClerk();
   const { user } = useUser();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [learnOpen, setLearnOpen] = useState(false);
+
+  const toolsTimeout = useRef(null);
+  const learnTimeout = useRef(null);
+
+  /* ---------- TOOL DROPDOWN HANDLERS ---------- */
+  const openTools = () => {
+    clearTimeout(toolsTimeout.current);
+    setToolsOpen(true);
+  };
+
+  const closeTools = () => {
+    toolsTimeout.current = setTimeout(() => {
+      setToolsOpen(false);
+    }, 120);
+  };
+
+  /* ---------- LEARN DROPDOWN HANDLERS ---------- */
+  const openLearn = () => {
+    clearTimeout(learnTimeout.current);
+    setLearnOpen(true);
+  };
+
+  const closeLearn = () => {
+    learnTimeout.current = setTimeout(() => {
+      setLearnOpen(false);
+    }, 120);
   };
 
   return (
-    <div className="container mx-auto py-6 px-8">
-      {/* Navbar container */}
-      <div className="flex justify-between items-center">
-        
-        {/* Logo */}
-       <div className="logo">
-  <Link to="/">
-    {/* Mobile logo (simplified) */}
-    <img 
-      src="logo sm.png" 
-      alt="FinXBox" 
-      className="w-24 h-auto block lg:hidden"
-    />
-    {/* Desktop logo (full) */}
-    <img 
-      src="logo.png" 
-      alt="FinXBox" 
-      className="w-40 h-auto hidden lg:block"
-    />
-  </Link>
-</div>
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        <div className="flex items-center justify-between h-20">
 
-        {/* Hamburger Menu (Mobile) */}
-        <button
-          className="lg:hidden text-NavPurple text-2xl focus:outline-none"
-          onClick={toggleMenu}
-        >
-          {isMenuOpen ? <FaTimes /> : <FaBars />}
-        </button>
+          {/* LOGO */}
+          <Link to="/" className="flex items-center">
+            <img
+              src="/logo.png"
+              alt="Finxbox"
+              className="h-10 sm:h-11 md:h-12 lg:h-14 xl:h-16 w-auto object-contain"
+            />
+          </Link>
 
-        {/* Menu */}
-        <div
-          className={`menu w-full lg:w-auto flex flex-col lg:flex-row justify-center items-center lg:justify-end lg:static absolute bg-white lg:bg-transparent lg:shadow-none shadow-lg lg:py-0 py-6 lg:px-0 px-8 lg:gap-10 gap-6 ${
-            isMenuOpen ? "top-16 left-0 right-0" : "hidden lg:flex"
-          }`}
-        >
-          <ul className="flex flex-col lg:flex-row justify-center items-center gap-6 lg:gap-10 w-full">
-            <li>
-              <Link
-                to="/financial-statement-generator"
-                className="flex items-center gap-2 text-NavPurple font-bold text-sm hover:underline"
+          {/* MOBILE TOGGLE */}
+          <button
+            className="lg:hidden text-gray-700"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+          </button>
+
+          {/* NAVIGATION */}
+          <nav
+            className={`${
+              mobileOpen ? "block" : "hidden"
+            } lg:flex absolute lg:static top-full left-0 w-full lg:w-auto bg-white lg:bg-transparent border-t lg:border-0`}
+          >
+            <ul className="flex flex-col lg:flex-row items-center gap-6 px-6 py-6 lg:p-0 text-sm font-semibold text-gray-800">
+
+              <li>
+                <Link to="/" className="hover:text-[#694F8E] transition">
+                  Home
+                </Link>
+              </li>
+
+              {/* TOOLS DROPDOWN */}
+              <li
+                className="relative"
+                onMouseEnter={openTools}
+                onMouseLeave={closeTools}
               >
-                <FaCalculator />
-                Financial Statement Generator
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/portfolio-calculator"
-                className="flex items-center gap-2 text-NavPurple font-bold text-sm hover:underline"
-              >
-                <FaCalculator />
-                Portfolio Calculator
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/position-size-calculator"
-                className="flex items-center gap-2 text-NavPurple font-bold text-sm hover:underline"
-              >
-                <FaCalculator />
-                Position Size Calculator
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="https://finxbox.blogspot.com/"
-                className="flex items-center gap-2 text-NavPurple font-bold text-sm hover:underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FaBlog />
-                Our Blog
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/store"
-                className="flex items-center gap-2 text-NavPurple font-bold text-sm hover:underline"
-                rel="noopener noreferrer"
-              >
-                <FaStore />
-                Visit Store
-              </Link>
-            </li>
-            <li>
-              {user ? (
-                <div className="flex justify-center items-center gap-6">
-                  Hi, {user.firstName} {user.lastName ? user.lastName : ""}
-                  <UserButton />
-                </div>
-              ) : (
-                <button
-                  onClick={() => openSignIn()}
-                  className="px-5 py-2 font-bold text-NavPurple bg-white border-2 border-NavPurple rounded-2xl shadow-md hover:bg-NavPurple hover:text-white hover:border-white hover:shadow-lg transition duration-300"
-                >
-                  Login
+                <button className="flex items-center gap-1 hover:text-[#694F8E] transition">
+                  Tools
+                  <ChevronDown
+                    size={16}
+                    className={`transition-transform duration-200 ${
+                      toolsOpen ? "rotate-180" : ""
+                    }`}
+                  />
                 </button>
-              )}
-            </li>
-          </ul>
+
+                <div
+                  onMouseEnter={openTools}
+                  onMouseLeave={closeTools}
+                  className={`absolute top-full left-0 mt-3 w-64 rounded-xl bg-white border border-gray-200 shadow-xl overflow-hidden transition-all duration-200 ${
+                    toolsOpen
+                      ? "opacity-100 translate-y-0 pointer-events-auto"
+                      : "opacity-0 translate-y-2 pointer-events-none"
+                  }`}
+                >
+                  <Link to="/financial-statement-generator" className="block px-5 py-3 hover:bg-gray-50">
+                    Financial Statement Generator
+                  </Link>
+                  <Link to="/portfolio-calculator" className="block px-5 py-3 hover:bg-gray-50">
+                    Portfolio Calculator
+                  </Link>
+                  <Link to="/position-size-calculator" className="block px-5 py-3 hover:bg-gray-50">
+                    Position Size Calculator
+                  </Link>
+                </div>
+              </li>
+
+              {/* LEARN DROPDOWN */}
+              <li
+                className="relative"
+                onMouseEnter={openLearn}
+                onMouseLeave={closeLearn}
+              >
+                <button className="flex items-center gap-1 hover:text-[#694F8E] transition">
+                  Learn
+                  <ChevronDown
+                    size={16}
+                    className={`transition-transform duration-200 ${
+                      learnOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                <div
+                  onMouseEnter={openLearn}
+                  onMouseLeave={closeLearn}
+                  className={`absolute top-full left-0 mt-3 w-56 rounded-xl bg-white border border-gray-200 shadow-xl overflow-hidden transition-all duration-200 ${
+                    learnOpen
+                      ? "opacity-100 translate-y-0 pointer-events-auto"
+                      : "opacity-0 translate-y-2 pointer-events-none"
+                  }`}
+                >
+                  <Link to="/course" className="block px-5 py-3 hover:bg-gray-50">
+                    Courses
+                  </Link>
+                  <Link to="/store" className="block px-5 py-3 hover:bg-gray-50">
+                    Books
+                  </Link>
+                </div>
+              </li>
+
+              <li>
+                <a
+                  href="https://finxbox.blogspot.com/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-[#694F8E] transition"
+                >
+                  Blog
+                </a>
+              </li>
+
+              <li>
+                {user ? (
+                  <UserButton />
+                ) : (
+                  <button
+                    onClick={() => openSignIn()}
+                    className="px-6 py-2 rounded-xl bg-[#694F8E] text-white font-medium shadow hover:scale-[1.03] hover:bg-[#563C70] transition"
+                  >
+                    Login
+                  </button>
+                )}
+              </li>
+
+            </ul>
+          </nav>
         </div>
       </div>
-    </div>
+    </header>
   );
 };
 

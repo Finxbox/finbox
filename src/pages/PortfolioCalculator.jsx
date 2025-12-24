@@ -1,4 +1,5 @@
 import PortfolioCalculatorComp from "../components/ToolsLayout/PortfolioCalculatorComp";
+import DematCTA from "../components/utility/DematCTA";
 import Disclaimer from "../components/utility/Disclaimer";
 
 const PortfolioCalculator = () => {
@@ -6,6 +7,7 @@ const PortfolioCalculator = () => {
     <>
       <PortfolioCalculatorComp />
       <Disclaimer />
+      <DematCTA />
     </>
   );
 };

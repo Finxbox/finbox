@@ -1,9 +1,10 @@
 import StoreComp from "../components/StoreLayout/StoreComp";
+import DematCTA from "../components/utility/DematCTA";
 
 function Store() {
   return (
     <div>
-      <StoreComp />
+      <StoreComp /><DematCTA />
     </div>
   );
 }

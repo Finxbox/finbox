@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Ads from "../ADS/Ads";
 
 const PortfolioCalculatorComp = () => {
   const [capital, setCapital] = useState("");
@@ -109,9 +108,7 @@ const PortfolioCalculatorComp = () => {
 
   return (
     <>
-      <div>
-        <Ads />
-      </div>
+      
       <div className="max-w-4xl min-h-screen mx-auto p-6 bg-gray-50 rounded-lg shadow-lg">
         <h1 className="text-3xl font-semibold text-center text-[#694F8E] mb-6">
           Portfolio Calculator

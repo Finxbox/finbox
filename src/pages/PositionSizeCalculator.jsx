@@ -1,4 +1,5 @@
 import PositionSizingCalculatorUI from "../components/ToolsLayout/PositionSizeUI";
+import DematCTA from "../components/utility/DematCTA";
 import Disclaimer from "../components/utility/Disclaimer";
 
 const PositionSizeCalculator = () => {
@@ -6,6 +7,7 @@ const PositionSizeCalculator = () => {
     <>
       <PositionSizingCalculatorUI />
       <Disclaimer />
+      <DematCTA />
     </>
   );
 };

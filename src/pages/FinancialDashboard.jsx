@@ -17,7 +17,8 @@ import {
   detectBankFromData
 } from '../components/utility/financialUtils.jsx';
 import { processFiles } from '../components/utility/fileProcessor';
-import Ads from '../components/ADS/Ads.jsx';
+import DematCTA from "../components/utility/DematCTA.jsx";
+
 
 function FinancialDashboard() {
   const [files, setFiles] = useState([]);
@@ -787,10 +788,7 @@ function FinancialDashboard() {
             </span>
           </div>
           
-          {/* Ads */}
-          <div className="mt-4">
-            <Ads />
-          </div>
+          
         </div>
 
         {/* Main Dashboard Content */}
@@ -1055,6 +1053,7 @@ function FinancialDashboard() {
                 Analyze New File
               </button>
             </div>
+            <DematCTA />
           </div>
         )}
       </div>

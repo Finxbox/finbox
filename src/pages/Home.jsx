@@ -212,40 +212,86 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ================= EDUCATION ================= */}
-      <section className="bg-gray-900 text-white">
-        <div className="max-w-7xl mx-auto px-6 md:px-8 py-32 grid lg:grid-cols-2 gap-20 items-center">
+      {/* ================= DEMAT CTA ================= */}
+<section className="bg-[#694F8E]">
+  <div className="max-w-7xl mx-auto px-6 md:px-8 py-28 grid lg:grid-cols-2 gap-20 items-center">
 
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-          >
-            <h2 className="text-4xl font-semibold">
-              Education That Teaches Discipline
-            </h2>
-            <p className="mt-5 text-gray-300 max-w-lg">
-              No tips. No signals. Just structure.
-            </p>
-          </motion.div>
+    {/* LEFT CONTENT */}
+    <div>
+      <span className="inline-block text-xs font-semibold tracking-wide text-[#694F8E] bg-white px-4 py-1.5 rounded-full mb-6">
+        Start Your Market Journey
+      </span>
 
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeUp}
-            className="bg-gray-800 rounded-2xl p-10 border border-gray-700"
-          >
-            <ul className="space-y-4 text-gray-300">
-              <li>✔ Risk-first mindset</li>
-              <li>✔ Price-action mastery</li>
-              <li>✔ Rule-based execution</li>
-            </ul>
-          </motion.div>
+      <h2 className="text-4xl md:text-5xl font-semibold text-white leading-tight">
+        Open Your Demat Account <br />
+        With Confidence
+      </h2>
 
-        </div>
-      </section>
+      <p className="mt-6 text-lg text-[#EDE7F6] max-w-xl">
+        To invest or trade in Indian markets, a Demat account is essential.
+        Open one with a trusted, SEBI-registered broker and start your journey
+        with the right foundation.
+      </p>
+
+      <ul className="mt-8 space-y-4 text-[#EDE7F6]">
+        <li>✔ Secure & SEBI-compliant account opening</li>
+        <li>✔ Fast onboarding with paperless process</li>
+        <li>✔ Access to equity, F&O, mutual funds & more</li>
+        <li>✔ Integrated with learning & tools ecosystem</li>
+      </ul>
+
+      <div className="mt-10 flex gap-4 flex-wrap">
+        <a
+          href="https://upstox.com/open-account/?f=GXP7"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-8 py-4 bg-white text-[#694F8E] font-semibold rounded-xl shadow hover:scale-[1.03] transition"
+        >
+          Open Demat Account
+        </a>
+
+        <Link
+          to="/course"
+          className="px-8 py-4 border border-white/40 text-white rounded-xl hover:bg-white/10 transition"
+        >
+          Learn Before You Invest
+        </Link>
+      </div>
+
+      <p className="mt-6 text-xs text-[#EDE7F6]/80 max-w-xl">
+        Opening a Demat account does not imply investment advice.
+        Finxbox provides educational tools only.
+      </p>
+    </div>
+
+    {/* RIGHT VISUAL CARD */}
+    <div className="bg-white rounded-3xl p-10 shadow-xl border border-gray-200">
+      <h3 className="text-2xl font-semibold text-gray-900 mb-6">
+        Why a Demat Account?
+      </h3>
+
+      <div className="space-y-5 text-gray-600">
+        <p>
+          A Demat account holds your shares and securities electronically,
+          making investing safer, faster, and more transparent.
+        </p>
+        <p>
+          Whether you’re a long-term investor or an active trader,
+          a Demat account is the gateway to Indian financial markets.
+        </p>
+      </div>
+
+      <div className="mt-8 border-t pt-6 text-sm text-gray-500">
+        Official partner: <span className="font-medium text-gray-800">Upstox</span><br />
+        SEBI-registered Stock Broker
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+    
 
     </div>
   );

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Ads from "../ADS/Ads";
 
 const PositionSizeCalculator = () => {
   const [accountBalance, setAccountBalance] = useState("");
@@ -45,9 +44,6 @@ const PositionSizeCalculator = () => {
 
   return (
     <>
-      <div>
-        <Ads />
-      </div>
       <div className="min-h-screen flex justify-center">
         <div className="max-w-6xl w-full bg-white rounded-lg shadow-xl p-6">
           <h2 className="text-3xl font-semibold text-center text-[#694F8E] mb-6">

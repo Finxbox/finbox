@@ -1,12 +1,14 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useClerk, useUser, UserButton } from "@clerk/clerk-react";
 import { ChevronDown } from "lucide-react";
 import { FaBars, FaTimes } from "react-icons/fa";
 
+import { supabase } from "../../lib/supabase";
+
 const Navbar = () => {
   const { openSignIn } = useClerk();
-  const { user } = useUser();
+  const { user, isSignedIn, isLoaded } = useUser();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
@@ -14,6 +16,23 @@ const Navbar = () => {
 
   const toolsTimeout = useRef(null);
   const learnTimeout = useRef(null);
+
+  /* =====================================
+     TEMP SUPABASE INSERT TEST (REMOVE LATER)
+     ===================================== */
+ useEffect(() => {
+  if (!isLoaded || !isSignedIn || !user) return;
+
+  const syncUser = async () => {
+    await supabase.from("user_profiles").upsert({
+      id: user.id,
+      is_premium: false,
+    });
+  };
+
+  syncUser();
+}, [isLoaded, isSignedIn, user]);
+
 
   /* ---------- TOOL DROPDOWN HANDLERS ---------- */
   const openTools = () => {

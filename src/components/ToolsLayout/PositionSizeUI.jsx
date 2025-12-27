@@ -1,6 +1,27 @@
 import { useState, useEffect } from "react";
+import { useUser } from "@clerk/clerk-react";
+import { supabase } from "../../lib/supabase";
+import { 
+  Download, 
+  BarChart3, 
+  TrendingUp, 
+  Shield, 
+  DollarSign,
+  Plus,
+  Trash2,
+  Save,
+  Zap,
+  Target,
+  AlertCircle,
+  Info,
+  Calculator,
+  ExternalLink
+} from "lucide-react";
 
 const PositionSizeCalculator = () => {
+  // Clerk Authentication
+  const { user, isLoaded } = useUser();
+
   // State management
   const [accountBalance, setAccountBalance] = useState(100000);
   const [cashInHand, setCashInHand] = useState(100000);
@@ -18,51 +39,231 @@ const PositionSizeCalculator = () => {
   const [activeTrades, setActiveTrades] = useState([]);
   const [closedTrades, setClosedTrades] = useState([]);
   const [transactions, setTransactions] = useState([]);
-  const [performanceData, setPerformanceData] = useState([]);
+  const [savedReports, setSavedReports] = useState([]);
   
   // UI states
   const [showCloseTradeModal, setShowCloseTradeModal] = useState(false);
   const [tradeToClose, setTradeToClose] = useState(null);
   const [closePrice, setClosePrice] = useState("");
   const [closeNotes, setCloseNotes] = useState("");
-  const [isPremium, setIsPremium] = useState(true);
+  const [isPremium, setIsPremium] = useState(false);
+  const [showReportsModal, setShowReportsModal] = useState(false);
+  const [reportName, setReportName] = useState("");
   
   // Transaction filtering
   const [filterType, setFilterType] = useState("ALL");
   const [sortBy, setSortBy] = useState("newest");
+  
+  // Loading states
+  const [loadingData, setLoadingData] = useState(true);
+  const [savingData, setSavingData] = useState(false);
+  const [error, setError] = useState(null);
+  const [savingReport, setSavingReport] = useState(false);
 
-  // Initialize from localStorage
+  // Initialize user data from Supabase
   useEffect(() => {
-    const savedCash = localStorage.getItem('tradeCashInHand');
-    const savedBalance = localStorage.getItem('tradeAccountBalance');
-    const savedActiveTrades = localStorage.getItem('activeTrades');
-    const savedClosedTrades = localStorage.getItem('closedTrades');
-    const savedTransactions = localStorage.getItem('tradeTransactions');
+    if (!isLoaded) return; // Wait for Clerk to load
+    
+    const loadUserData = async () => {
+      setLoadingData(true);
+      setError(null);
+      
+      try {
+        if (!user) {
+          // User not logged in - use localStorage as fallback
+          loadLocalData();
+          setLoadingData(false);
+          return;
+        }
+
+        // Fetch user profile including premium status from user_profiles table
+        const { data: profile, error: profileError } = await supabase
+          .from("user_profiles")
+          .select("is_premium")
+          .eq("userid", user.id)  // Changed from 'id' to 'userid' to match your table
+          .single();
+
+        if (!profileError && profile) {
+          setIsPremium(profile.is_premium);
+        }
+
+        // Load user's saved reports from saved_reports table
+        const { data: savedReportsData, error: reportsError } = await supabase
+          .from("saved_reports")
+          .select("*")
+          .eq("userid", user.id)
+          .order("created_at", { ascending: false });
+
+        if (!reportsError && savedReportsData) {
+          setSavedReports(savedReportsData);
+          
+          // Try to load the most recent report as current state
+          if (savedReportsData.length > 0) {
+            const latestReport = savedReportsData[0].report_data;
+            setCashInHand(latestReport.cashInHand || 100000);
+            setAccountBalance(latestReport.accountBalance || 100000);
+            setActiveTrades(latestReport.activeTrades || []);
+            setClosedTrades(latestReport.closedTrades || []);
+            setTransactions(latestReport.transactions || []);
+          }
+        }
+
+        // Load from localStorage as fallback (if no saved reports)
+        loadLocalData();
+
+      } catch (err) {
+        console.error("Error loading user data:", err);
+        setError("Failed to load your trading data. Using local storage.");
+        loadLocalData();
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    loadUserData();
+  }, [user, isLoaded]);
+
+  // Save current state as a report
+  const saveCurrentReport = async (reportTitle = "Trading Report") => {
+    if (!user) {
+      alert("Please sign in to save reports");
+      return;
+    }
+
+    setSavingReport(true);
+    try {
+      const reportData = {
+        cashInHand,
+        accountBalance,
+        activeTrades,
+        closedTrades,
+        transactions,
+        positionSize,
+        lastUpdated: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from("saved_reports")
+        .insert({
+          userid: user.id,
+          report_name: reportTitle,
+          report_data: reportData,
+          created_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      // Refresh saved reports list
+      const { data: newReports, error: fetchError } = await supabase
+        .from("saved_reports")
+        .select("*")
+        .eq("userid", user.id)
+        .order("created_at", { ascending: false });
+
+      if (!fetchError) {
+        setSavedReports(newReports);
+      }
+
+      alert(`✅ Report "${reportTitle}" saved successfully!`);
+      setShowReportsModal(false);
+      setReportName("");
+
+    } catch (err) {
+      console.error("Error saving report:", err);
+      alert("❌ Failed to save report. Please try again.");
+    } finally {
+      setSavingReport(false);
+    }
+  };
+
+  // Load a saved report
+  const loadSavedReport = async (reportId) => {
+    try {
+      const { data: report, error } = await supabase
+        .from("saved_reports")
+        .select("*")
+        .eq("id", reportId)
+        .single();
+
+      if (error) throw error;
+
+      const reportData = report.report_data;
+      setCashInHand(reportData.cashInHand || 100000);
+      setAccountBalance(reportData.accountBalance || 100000);
+      setActiveTrades(reportData.activeTrades || []);
+      setClosedTrades(reportData.closedTrades || []);
+      setTransactions(reportData.transactions || []);
+      setPositionSize(reportData.positionSize || null);
+
+      alert(`✅ Report "${report.report_name}" loaded successfully!`);
+    } catch (err) {
+      console.error("Error loading report:", err);
+      alert("❌ Failed to load report. Please try again.");
+    }
+  };
+
+  // Delete a saved report
+  const deleteSavedReport = async (reportId, reportName) => {
+    if (window.confirm(`Are you sure you want to delete report "${reportName}"?`)) {
+      try {
+        const { error } = await supabase
+          .from("saved_reports")
+          .delete()
+          .eq("id", reportId);
+
+        if (error) throw error;
+
+        // Update local state
+        setSavedReports(prev => prev.filter(report => report.id !== reportId));
+        alert(`✅ Report deleted successfully!`);
+      } catch (err) {
+        console.error("Error deleting report:", err);
+        alert("❌ Failed to delete report. Please try again.");
+      }
+    }
+  };
+
+  // Local storage fallback functions
+  const loadLocalData = () => {
+    const userId = user ? user.id : 'guest';
+    
+    const savedCash = localStorage.getItem(`tradeCash_${userId}`);
+    const savedBalance = localStorage.getItem(`tradeBalance_${userId}`);
+    const savedActiveTrades = localStorage.getItem(`activeTrades_${userId}`);
+    const savedClosedTrades = localStorage.getItem(`closedTrades_${userId}`);
+    const savedTransactions = localStorage.getItem(`transactions_${userId}`);
     
     if (savedCash) setCashInHand(parseFloat(savedCash));
     if (savedBalance) setAccountBalance(parseFloat(savedBalance));
     if (savedActiveTrades) setActiveTrades(JSON.parse(savedActiveTrades));
     if (savedClosedTrades) setClosedTrades(JSON.parse(savedClosedTrades));
     if (savedTransactions) setTransactions(JSON.parse(savedTransactions));
-    
-    // Initialize performance data
-    const initialData = [
-      { day: "Mon", profit: 12000, risk: 4000, label: "Day 1" },
-      { day: "Tue", profit: 18000, risk: 6000, label: "Day 2" },
-      { day: "Wed", profit: 8000, risk: 7000, label: "Day 3" },
-      { day: "Thu", profit: 22000, risk: 5000, label: "Day 4" },
-      { day: "Fri", profit: 15000, risk: 5500, label: "Day 5" },
-    ];
-    setPerformanceData(initialData);
-  }, []);
+  };
 
-  // Save transactions to localStorage
+  const saveLocalData = () => {
+    const userId = user ? user.id : 'guest';
+    
+    localStorage.setItem(`tradeCash_${userId}`, cashInHand.toString());
+    localStorage.setItem(`tradeBalance_${userId}`, accountBalance.toString());
+    localStorage.setItem(`activeTrades_${userId}`, JSON.stringify(activeTrades));
+    localStorage.setItem(`closedTrades_${userId}`, JSON.stringify(closedTrades));
+    localStorage.setItem(`transactions_${userId}`, JSON.stringify(transactions));
+  };
+
+  // Auto-save to localStorage when changes occur
   useEffect(() => {
-    localStorage.setItem('tradeTransactions', JSON.stringify(transactions));
-  }, [transactions]);
+    if (!loadingData) {
+      saveLocalData();
+    }
+  }, [cashInHand, accountBalance, activeTrades, closedTrades, transactions, user]);
 
   // Calculate position size
-  const calculatePositionSize = () => {
+  const calculatePositionSize = async () => {
+    if (!user && !isPremium) {
+      alert("Please sign in to use the trading calculator");
+      return;
+    }
+
     const accountBalanceNum = parseFloat(accountBalance);
     const riskPercentNum = parseFloat(riskPercent) / 100;
     const entryPriceNum = parseFloat(entryPrice);
@@ -142,20 +343,19 @@ const PositionSizeCalculator = () => {
       positionSize: positionSizeCalc,
       riskAmount: actualRiskAmount,
       investedCapital: requiredCapital,
-      dateOpened: new Date().toLocaleString(),
+      dateOpened: new Date().toISOString(),
       status: "active",
-      notes: ""
+      notes: "",
+      user_id: user?.id || 'guest'
     };
 
     // Add to active trades
     const updatedTrades = [...activeTrades, newTrade];
     setActiveTrades(updatedTrades);
-    localStorage.setItem('activeTrades', JSON.stringify(updatedTrades));
 
     // Update cash
     const newCash = cashInHand - requiredCapital;
     setCashInHand(newCash);
-    localStorage.setItem('tradeCashInHand', newCash.toString());
 
     // LOG THE BUY TRANSACTION
     const buyTransaction = {
@@ -170,7 +370,8 @@ const PositionSizeCalculator = () => {
       amount: requiredCapital,
       action: "OPENED",
       profitLoss: null,
-      cashAfter: newCash
+      cashAfter: newCash,
+      user_id: user?.id || 'guest'
     };
     
     setTransactions(prev => [buyTransaction, ...prev]);
@@ -187,7 +388,7 @@ const PositionSizeCalculator = () => {
   };
 
   // Confirm trade closing
-  const handleConfirmCloseTrade = () => {
+  const handleConfirmCloseTrade = async () => {
     if (!tradeToClose || !closePrice) return;
 
     const closePriceNum = parseFloat(closePrice);
@@ -207,29 +408,26 @@ const PositionSizeCalculator = () => {
       closePrice: closePriceNum,
       profitLoss: profitLoss,
       returnPercent: returnPercent,
-      dateClosed: new Date().toLocaleString(),
+      dateClosed: new Date().toISOString(),
       status: "closed",
-      closeNotes: closeNotes
+      closeNotes: closeNotes,
+      user_id: user?.id || 'guest'
     };
 
     // Update cash
     const newCash = cashInHand + tradeToClose.investedCapital + profitLoss;
     setCashInHand(newCash);
-    localStorage.setItem('tradeCashInHand', newCash.toString());
 
     // Update account balance
     const newBalance = accountBalance + profitLoss;
     setAccountBalance(newBalance);
-    localStorage.setItem('tradeAccountBalance', newBalance.toString());
 
     // Move trade
     const updatedActive = activeTrades.filter(t => t.id !== tradeToClose.id);
     setActiveTrades(updatedActive);
-    localStorage.setItem('activeTrades', JSON.stringify(updatedActive));
     
     const updatedClosed = [closedTrade, ...closedTrades];
     setClosedTrades(updatedClosed);
-    localStorage.setItem('closedTrades', JSON.stringify(updatedClosed));
 
     // LOG THE SELL TRANSACTION
     const sellTransaction = {
@@ -248,7 +446,8 @@ const PositionSizeCalculator = () => {
       returnPercent: returnPercent,
       closeType: "MANUAL",
       closeNotes: closeNotes,
-      cashAfter: newCash
+      cashAfter: newCash,
+      user_id: user?.id || 'guest'
     };
     
     setTransactions(prev => [sellTransaction, ...prev]);
@@ -284,31 +483,25 @@ const PositionSizeCalculator = () => {
       closePrice: closePriceNum,
       profitLoss: profitLoss,
       returnPercent: returnPercent,
-      dateClosed: new Date().toLocaleString(),
+      dateClosed: new Date().toISOString(),
       status: "closed",
-      closeNotes: `Closed at ${type === 'target' ? 'Target' : 'Stop Loss'}`
+      closeNotes: `Closed at ${type === 'target' ? 'Target' : 'Stop Loss'}`,
+      user_id: user?.id || 'guest'
     };
 
     // Update cash
     const newCash = cashInHand + trade.investedCapital + profitLoss;
     setCashInHand(newCash);
-    localStorage.setItem('tradeCashInHand', newCash.toString());
 
     // Update balance
     const newBalance = accountBalance + profitLoss;
     setAccountBalance(newBalance);
-    localStorage.setItem('tradeAccountBalance', newBalance.toString());
 
     // Move trade
-    setActiveTrades(prev => {
-      const updated = prev.filter(t => t.id !== trade.id);
-      localStorage.setItem('activeTrades', JSON.stringify(updated));
-      return updated;
-    });
+    setActiveTrades(prev => prev.filter(t => t.id !== trade.id));
     
     const updatedClosed = [closedTrade, ...closedTrades];
     setClosedTrades(updatedClosed);
-    localStorage.setItem('closedTrades', JSON.stringify(updatedClosed));
 
     // LOG THE SELL TRANSACTION FOR QUICK CLOSE
     const sellTransaction = {
@@ -327,7 +520,8 @@ const PositionSizeCalculator = () => {
       returnPercent: returnPercent,
       closeType: type === 'target' ? "TARGET" : "STOP_LOSS",
       closeNotes: `Closed at ${type === 'target' ? 'Target' : 'Stop Loss'}`,
-      cashAfter: newCash
+      cashAfter: newCash,
+      user_id: user?.id || 'guest'
     };
     
     setTransactions(prev => [sellTransaction, ...prev]);
@@ -348,11 +542,9 @@ const PositionSizeCalculator = () => {
       if (trade) {
         const newCash = cashInHand + trade.investedCapital;
         setCashInHand(newCash);
-        localStorage.setItem('tradeCashInHand', newCash.toString());
         
         const updatedActive = activeTrades.filter(t => t.id !== tradeId);
         setActiveTrades(updatedActive);
-        localStorage.setItem('activeTrades', JSON.stringify(updatedActive));
 
         // LOG THE DELETE TRANSACTION
         const deleteTransaction = {
@@ -365,7 +557,8 @@ const PositionSizeCalculator = () => {
           amount: trade.investedCapital,
           action: "DELETED",
           reason: "User deleted trade",
-          cashAfter: newCash
+          cashAfter: newCash,
+          user_id: user?.id || 'guest'
         };
         
         setTransactions(prev => [deleteTransaction, ...prev]);
@@ -387,8 +580,6 @@ const PositionSizeCalculator = () => {
       const difference = newAmount - cashInHand;
       setCashInHand(newAmount);
       setAccountBalance(prev => prev + difference);
-      localStorage.setItem('tradeCashInHand', newAmount.toString());
-      localStorage.setItem('tradeAccountBalance', (accountBalance + difference).toString());
       
       // LOG DEPOSIT/WITHDRAWAL
       const cashTransaction = {
@@ -398,7 +589,8 @@ const PositionSizeCalculator = () => {
         type: difference > 0 ? "DEPOSIT" : "WITHDRAWAL",
         amount: Math.abs(difference),
         action: difference > 0 ? "ADDED_FUNDS" : "WITHDREW_FUNDS",
-        cashAfter: newAmount
+        cashAfter: newAmount,
+        user_id: user?.id || 'guest'
       };
       
       setTransactions(prev => [cashTransaction, ...prev]);
@@ -411,8 +603,6 @@ const PositionSizeCalculator = () => {
     const newBalance = accountBalance + amount;
     setCashInHand(newCash);
     setAccountBalance(newBalance);
-    localStorage.setItem('tradeCashInHand', newCash.toString());
-    localStorage.setItem('tradeAccountBalance', newBalance.toString());
 
     // LOG DEPOSIT
     const depositTransaction = {
@@ -423,7 +613,8 @@ const PositionSizeCalculator = () => {
       amount: amount,
       action: "ADDED_FUNDS",
       cashBefore: cashInHand,
-      cashAfter: newCash
+      cashAfter: newCash,
+      user_id: user?.id || 'guest'
     };
     
     setTransactions(prev => [depositTransaction, ...prev]);
@@ -437,8 +628,6 @@ const PositionSizeCalculator = () => {
       const newBalance = accountBalance - amount;
       setCashInHand(newCash);
       setAccountBalance(newBalance);
-      localStorage.setItem('tradeCashInHand', newCash.toString());
-      localStorage.setItem('tradeAccountBalance', newBalance.toString());
 
       // LOG WITHDRAWAL
       const withdrawalTransaction = {
@@ -449,7 +638,8 @@ const PositionSizeCalculator = () => {
         amount: amount,
         action: "WITHDREW_FUNDS",
         cashBefore: cashInHand,
-        cashAfter: newCash
+        cashAfter: newCash,
+        user_id: user?.id || 'guest'
       };
       
       setTransactions(prev => [withdrawalTransaction, ...prev]);
@@ -461,12 +651,12 @@ const PositionSizeCalculator = () => {
   };
 
   const handleResetAll = () => {
-    if (window.confirm("Reset all data?")) {
+    if (window.confirm("Reset all data? This cannot be undone.")) {
+      // Reset local state
       setCashInHand(100000);
       setAccountBalance(100000);
       setActiveTrades([]);
       setClosedTrades([]);
-      setTransactions([]);
       setPositionSize(null);
       
       // LOG RESET
@@ -477,16 +667,14 @@ const PositionSizeCalculator = () => {
         type: "RESET",
         action: "SYSTEM_RESET",
         reason: "User reset all data",
-        cashAfter: 100000
+        cashAfter: 100000,
+        user_id: user?.id || 'guest'
       };
       
       setTransactions([resetTransaction]);
-      
-      localStorage.removeItem('tradeCashInHand');
-      localStorage.removeItem('tradeAccountBalance');
-      localStorage.removeItem('activeTrades');
-      localStorage.removeItem('closedTrades');
-      localStorage.setItem('tradeTransactions', JSON.stringify([resetTransaction]));
+
+      // Save to localStorage
+      saveLocalData();
     }
   };
 
@@ -506,8 +694,18 @@ const PositionSizeCalculator = () => {
     return 0;
   });
 
-  // EXCEL EXPORT FUNCTION
+  // Export to Excel - Premium feature
   const exportToExcel = () => {
+    if (!user) {
+      alert("Please sign in to export data");
+      return;
+    }
+
+    if (!isPremium) {
+      alert("🔒 Premium feature. Please upgrade to export reports.");
+      return;
+    }
+
     if (transactions.length === 0) {
       alert("No transactions to export!");
       return;
@@ -517,9 +715,12 @@ const PositionSizeCalculator = () => {
       // Create Excel data
       const excelData = [
         ["TRADING TRANSACTIONS REPORT"],
+        ["User:", user.fullName || user.primaryEmailAddress?.emailAddress],
+        ["User ID:", user.id],
         ["Generated on:", new Date().toLocaleString()],
-        ["Total Transactions:", transactions.length],
+        ["Premium User:", isPremium ? "Yes" : "No"],
         [],
+        ["TRANSACTION HISTORY"],
         ["Date", "Time", "Type", "Trade Type", "Symbol", "Quantity", "Price", "Amount", "P&L", "Return%", "Action", "Cash After"],
         ...transactions.map(txn => [
           txn.date,
@@ -534,7 +735,15 @@ const PositionSizeCalculator = () => {
           txn.returnPercent ? txn.returnPercent.toFixed(2) + "%" : "",
           txn.action || "",
           txn.cashAfter || 0
-        ])
+        ]),
+        [],
+        ["PORTFOLIO SUMMARY"],
+        ["Cash in Hand", `₹${cashInHand.toLocaleString()}`],
+        ["Account Balance", `₹${accountBalance.toLocaleString()}`],
+        ["Active Trades", activeTrades.length],
+        ["Closed Trades", closedTrades.length],
+        ["Total Transactions", transactions.length],
+        ["Net P&L", `₹${transactions.reduce((sum, t) => sum + (t.profitLoss || 0), 0).toLocaleString()}`]
       ];
 
       // Convert to CSV
@@ -561,7 +770,7 @@ const PositionSizeCalculator = () => {
       const url = URL.createObjectURL(blob);
       
       link.href = url;
-      link.download = `Trading_Report_${new Date().toISOString().split('T')[0]}.csv`;
+      link.download = `Trading_Report_${user.id}_${new Date().toISOString().split('T')[0]}.csv`;
       link.style.visibility = 'hidden';
       
       document.body.appendChild(link);
@@ -571,8 +780,9 @@ const PositionSizeCalculator = () => {
       setTimeout(() => {
         alert(`✅ Excel Report Generated!
         
-📊 Transactions: ${transactions.length}
-💾 File: Trading_Report_[date].csv`);
+📊 User: ${user.fullName || user.primaryEmailAddress?.emailAddress}
+📈 Transactions: ${transactions.length}
+💾 File: Trading_Report_[UserID]_[date].csv`);
       }, 100);
       
     } catch (error) {
@@ -626,6 +836,19 @@ const PositionSizeCalculator = () => {
     };
   };
 
+  // Loading state
+  if (loadingData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 font-medium">Loading your trading data...</p>
+          <p className="text-sm text-gray-500 mt-2">{user ? `Welcome back, ${user.fullName}` : "Please wait"}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 p-4 md:p-6">
       {/* Header */}
@@ -633,7 +856,17 @@ const PositionSizeCalculator = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
           <div>
             <h1 className="text-4xl font-bold text-gray-900">ProTrade Calculator</h1>
-            <p className="text-gray-600 mt-2">Professional Trading & Journal System</p>
+            <p className="text-gray-600 mt-2">
+              {user ? `Welcome, ${user.fullName || user.primaryEmailAddress?.emailAddress}` : "Professional Trading System"}
+            </p>
+            <div className="flex items-center space-x-3 mt-2">
+              {error && (
+                <span className="text-sm text-red-600 flex items-center">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  {error}
+                </span>
+              )}
+            </div>
           </div>
           <div className="flex items-center space-x-4 mt-4 md:mt-0">
             <div className="bg-white px-4 py-2 rounded-lg shadow border border-gray-200">
@@ -642,12 +875,30 @@ const PositionSizeCalculator = () => {
                 ₹{cashInHand.toLocaleString()}
               </p>
             </div>
-            <button 
-              onClick={() => setIsPremium(!isPremium)}
-              className={`px-6 py-3 rounded-lg font-semibold ${isPremium ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'bg-white text-gray-700 border'}`}
-            >
-              {isPremium ? 'PREMIUM ACTIVE' : 'UPGRADE TO PRO'}
-            </button>
+            {!user ? (
+              <button 
+                onClick={() => window.location.href = "/sign-in"}
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:opacity-90"
+              >
+                Sign In to Save Data
+              </button>
+            ) : (
+              <div className="flex items-center space-x-3">
+                <button 
+                  onClick={() => setShowReportsModal(true)}
+                  className="px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:opacity-90 flex items-center"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Report
+                </button>
+                <button 
+                  onClick={() => setIsPremium(!isPremium)}
+                  className={`px-6 py-3 rounded-lg font-semibold ${isPremium ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'}`}
+                >
+                  {isPremium ? '🚀 PREMIUM' : '⚡ FREE'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -671,6 +922,15 @@ const PositionSizeCalculator = () => {
           >
             - Withdraw ₹10,000
           </button>
+          {user && isPremium && (
+            <button
+              onClick={exportToExcel}
+              disabled={transactions.length === 0}
+              className={`px-4 py-2 rounded-lg ${transactions.length === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-emerald-500 to-green-600 hover:opacity-90'} text-white`}
+            >
+              📊 Export Excel
+            </button>
+          )}
           <button
             onClick={handleResetAll}
             className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 ml-auto"
@@ -678,13 +938,39 @@ const PositionSizeCalculator = () => {
             Reset All
           </button>
         </div>
+
+        {/* Premium Notice */}
+        {user && !isPremium && (
+          <div className="mt-4 p-3 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-lg">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-amber-800">
+                  Free Account Limitations
+                </p>
+                <p className="text-xs text-amber-700 mt-1">
+                  Upgrade to premium to export Excel reports and access advanced analytics.
+                </p>
+                <button
+                  onClick={() => window.location.href = "/pricing"}
+                  className="mt-2 text-sm font-medium text-amber-800 hover:text-amber-900 underline"
+                >
+                  View premium features →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Left Column - Calculator */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Position Calculator</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+              <Calculator className="w-6 h-6 mr-2 text-blue-600" />
+              Position Calculator
+            </h2>
             
             <div className="space-y-6">
               {/* Trade Type */}
@@ -754,7 +1040,8 @@ const PositionSizeCalculator = () => {
               {/* Calculate Button */}
               <button
                 onClick={calculatePositionSize}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:opacity-90"
+                disabled={!user && !isPremium}
+                className={`w-full py-4 text-white rounded-xl font-bold text-lg hover:opacity-90 ${!user && !isPremium ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-purple-600'}`}
               >
                 {tradeType === "LONG" ? "📈 Calculate & Buy" : "📉 Calculate & Short"}
               </button>
@@ -763,7 +1050,12 @@ const PositionSizeCalculator = () => {
 
           {/* Active Trades */}
           <div className="bg-white rounded-2xl shadow-xl p-6">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">Active Trades ({activeTrades.length})</h3>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">Active Trades ({activeTrades.length})</h3>
+              <span className="text-sm text-gray-500">
+                {user ? `${savedReports.length} reports saved` : "Sign in to save reports"}
+              </span>
+            </div>
             {activeTrades.length > 0 ? (
               <div className="space-y-4">
                 {activeTrades.map((trade) => (
@@ -802,7 +1094,7 @@ const PositionSizeCalculator = () => {
                       </div>
                     </div>
                     
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <button
                         onClick={() => handleCloseTrade(trade)}
                         className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 text-sm"
@@ -835,6 +1127,7 @@ const PositionSizeCalculator = () => {
               <div className="text-center py-10 text-gray-500">
                 <div className="text-4xl mb-4">📊</div>
                 <p className="text-lg">No active trades</p>
+                <p className="text-sm mt-1">{user ? "Start trading to see your positions here" : "Sign in to start trading"}</p>
               </div>
             )}
           </div>
@@ -847,7 +1140,9 @@ const PositionSizeCalculator = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
               <div>
                 <h3 className="text-xl font-bold text-gray-900">Trade Journal</h3>
-                <p className="text-sm text-gray-500 mt-1">All trading activities</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {user ? "Your trading history" : "Sign in to save your trades"}
+                </p>
               </div>
               
               <div className="flex items-center space-x-4 mt-4 md:mt-0">
@@ -876,16 +1171,6 @@ const PositionSizeCalculator = () => {
                     <option value="loss">Highest Loss</option>
                   </select>
                 </div>
-                
-                {/* Export Button */}
-                {transactions.length > 0 && (
-                  <button
-                    onClick={exportToExcel}
-                    className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:opacity-90 text-sm flex items-center"
-                  >
-                    📊 Export Excel
-                  </button>
-                )}
               </div>
             </div>
             
@@ -1030,13 +1315,15 @@ const PositionSizeCalculator = () => {
                 <div className="text-center py-10 text-gray-500">
                   <div className="text-4xl mb-4">📝</div>
                   <p className="text-lg">No transactions yet</p>
-                  <p className="text-sm mt-1">Start trading to see your journal</p>
+                  <p className="text-sm mt-1">
+                    {user ? "Start trading to see your journal" : "Sign in to start tracking trades"}
+                  </p>
                 </div>
               )}
             </div>
             
             {/* Export Footer */}
-            {transactions.length > 0 && (
+            {user && isPremium && transactions.length > 0 && (
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <div className="flex justify-between items-center">
                   <div className="text-sm text-gray-600">
@@ -1052,8 +1339,182 @@ const PositionSizeCalculator = () => {
               </div>
             )}
           </div>
+
+          {/* User Info Panel */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl shadow-xl p-6 border border-blue-200">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Account Info</h3>
+            
+            {user ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-white/50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-gray-900">{user.fullName || "User"}</p>
+                    <p className="text-sm text-gray-600">{user.primaryEmailAddress?.emailAddress}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-sm font-medium ${isPremium ? 'text-purple-600' : 'text-gray-600'}`}>
+                      {isPremium ? '🚀 Premium' : '⚡ Free'}
+                    </p>
+                    <p className="text-xs text-gray-500">Account Type</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white p-3 rounded-lg text-center">
+                    <p className="text-sm text-gray-600">Balance</p>
+                    <p className="text-lg font-bold text-gray-900">₹{accountBalance.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg text-center">
+                    <p className="text-sm text-gray-600">Available Cash</p>
+                    <p className="text-lg font-bold text-green-600">₹{cashInHand.toLocaleString()}</p>
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t border-blue-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-medium text-gray-900">Saved Reports</p>
+                    <span className="text-sm text-blue-600">{savedReports.length}</span>
+                  </div>
+                  {savedReports.length > 0 ? (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {savedReports.slice(0, 3).map(report => (
+                        <div key={report.id} className="flex items-center justify-between p-2 bg-white rounded-lg hover:bg-gray-50">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{report.report_name}</p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(report.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => loadSavedReport(report.id)}
+                            className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                          >
+                            Load
+                          </button>
+                        </div>
+                      ))}
+                      {savedReports.length > 3 && (
+                        <p className="text-xs text-gray-500 text-center">
+                          + {savedReports.length - 3} more reports
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-2">
+                      No saved reports yet
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <div className="text-4xl mb-4 text-gray-400">🔒</div>
+                <h4 className="text-lg font-medium text-gray-900 mb-2">Sign In Required</h4>
+                <p className="text-sm text-gray-600 mb-4">
+                  Sign in to save your trades, access from any device, and export reports.
+                </p>
+                <button
+                  onClick={() => window.location.href = "/sign-in"}
+                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:opacity-90"
+                >
+                  Sign In / Sign Up
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Saved Reports Modal */}
+      {showReportsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">Saved Reports</h3>
+              <button
+                onClick={() => setShowReportsModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Save New Report */}
+            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
+              <h4 className="font-medium text-gray-900 mb-3">Save Current State</h4>
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={reportName}
+                  onChange={(e) => setReportName(e.target.value)}
+                  placeholder="Enter report name"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg"
+                />
+                <button
+                  onClick={() => saveCurrentReport(reportName || `Report ${savedReports.length + 1}`)}
+                  disabled={savingReport}
+                  className={`px-4 py-2 rounded-lg ${savingReport ? 'bg-gray-400' : 'bg-gradient-to-r from-blue-600 to-purple-600'} text-white`}
+                >
+                  {savingReport ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                Save your current trades, cash balance, and transactions.
+              </p>
+            </div>
+
+            {/* Saved Reports List */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-gray-900">Your Saved Reports ({savedReports.length})</h4>
+              {savedReports.length > 0 ? (
+                savedReports.map(report => (
+                  <div key={report.id} className="border border-gray-200 rounded-xl p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h5 className="font-bold text-gray-900">{report.report_name}</h5>
+                        <p className="text-sm text-gray-600">
+                          Created: {new Date(report.created_at).toLocaleString()}
+                        </p>
+                        <div className="flex items-center space-x-2 mt-2">
+                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                            Cash: ₹{report.report_data.cashInHand?.toLocaleString() || '0'}
+                          </span>
+                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                            Trades: {report.report_data.activeTrades?.length || 0}
+                          </span>
+                          <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                            Transactions: {report.report_data.transactions?.length || 0}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => loadSavedReport(report.id)}
+                          className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 text-sm"
+                        >
+                          Load
+                        </button>
+                        <button
+                          onClick={() => deleteSavedReport(report.id, report.report_name)}
+                          className="px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-sm"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="text-4xl mb-4">📂</div>
+                  <p>No saved reports yet</p>
+                  <p className="text-sm mt-1">Save your first report above</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       {isEditingCash && (

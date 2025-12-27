@@ -24,7 +24,19 @@ const Home = () => {
 
       {/* ================= HERO ================= */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#F1ECFA] via-white to-[#FAFAFB]" />
+  {/* Subtle SaaS gradient background */}
+  <div className="absolute inset-0">
+    {/* Base soft gradient */}
+    <div className="absolute inset-0 bg-gradient-to-b from-[#F1ECFA] via-white to-[#FAFAFB]" />
+
+    {/* Very subtle radial glow (SaaS feel) */}
+    <div
+      className="absolute top-[-30%] left-1/2 -translate-x-1/2
+                 w-[800px] h-[800px]
+                 bg-[radial-gradient(circle,rgba(105,79,142,0.08)_0%,rgba(105,79,142,0.04)_30%,transparent_60%)]"
+    />
+  </div>
+
 
         <motion.div
           className="relative max-w-4xl mx-auto px-6 md:px-8 py-32 text-center"

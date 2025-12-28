@@ -17,6 +17,7 @@ import CoursePage from "./pages/CoursePage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import CookiePolicy from "./pages/CookiePolicy";
+import PremiumJournal from "./pages/PremiumJournal";
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -47,6 +48,11 @@ const App = () => {
           element={<PositionSizeCalculator />}
         />
       </Route>
+
+      <Route
+          path="/trading-journal"
+          element={<PremiumJournal />}
+        />
 
       {/* STORE / COURSES LAYOUT */}
       <Route element={<StoreLayout />}>

@@ -462,88 +462,86 @@ const PortfolioCalculatorComp = () => {
   };
 
   // 🔹 Razorpay Payment Integration
-  const startPayment = async () => {
-    try {
-      if (!isSignedIn || !user) {
-        const shouldLogin = confirm("Please login to unlock premium features. Would you like to login now?");
-        if (shouldLogin) {
-          openSignIn();
-        }
-        return;
-      }
-
-      const currentUserId = user.id;
-      console.log("Clerk user:", currentUserId);
-
-      // 1️⃣ Create Razorpay order
-      const res = await fetch(
-        "https://gopbaibklcxxccqinfli.supabase.co/functions/v1/create-razorpay-order",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount: 99 }), // 99 INR in paise
-        }
-      );
-
-      const order = await res.json();
-      if (!order.orderId) throw new Error("Order creation failed");
-
-      // 2️⃣ Razorpay Checkout
-      const rzp = new window.Razorpay({
-        key: "rzp_test_Rx2I5u0o0EHnwe",
-        amount: order.amount,
-        currency: "INR",
-        name: "Finxbox Portfolio Pro",
-        description: "Premium Portfolio Management",
-        order_id: order.orderId,
-        handler: async (response) => {
-          // 3️⃣ Verify payment
-          const verifyRes = await fetch(
-            "https://gopbaibklcxxccqinfli.supabase.co/functions/v1/verify-razorpay-payment",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                user_id: currentUserId,
-              }),
-            }
-          );
-
-          const verifyData = await verifyRes.json();
-          if (verifyData.success) {
-            alert("🎉 Premium unlocked! Welcome to Portfolio Pro.");
-            setIsPremium(true);
-            setShowUpgradeModal(false);
-            // Refresh user premium status
-            await checkPremiumStatus();
-          } else {
-            alert("Payment verification failed. Please contact support.");
-          }
-        },
-        prefill: {
-          name: user.fullName || "",
-          email: user.primaryEmailAddress?.emailAddress || "",
-        },
-        theme: { 
-          color: "#6366f1",
-          hide_topbar: false 
-        },
-      });
-
-      rzp.on('payment.failed', function (response) {
-        console.error("Payment failed:", response.error);
-        alert(`Payment failed: ${response.error.description || "Unknown error"}`);
-      });
-
-      rzp.open();
-    } catch (err) {
-      console.error("Payment error:", err);
-      alert("Payment failed. Please try again.");
+// @ts-nocheck
+const startPayment = async () => {
+  try {
+    if (!isSignedIn || !user) {
+      alert("Please login to unlock premium");
+      openSignIn();
+      return;
     }
-  };
+
+    const clerkUserId = user.id;
+    console.log("Clerk user:", clerkUserId);
+
+    // Create order – ₹99
+    const res = await fetch(
+      "https://gopbaibklcxxccqinfli.supabase.co/functions/v1/create-razorpay-order",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: 99 }), // ₹99
+      }
+    );
+
+    const order = await res.json();
+    console.log("Order:", order);
+
+    if (!order.orderId) throw new Error("Order failed");
+
+    const rzp = new window.Razorpay({
+      key: "rzp_test_Rx2I5u0o0EHnwe",
+      amount: order.amount,
+      currency: order.currency,
+      name: "Finxbox",
+      description: "Premium Access – ₹99 / month",
+      order_id: order.orderId,
+
+      handler: async (response) => {
+  if (
+    !response?.razorpay_order_id ||
+    !response?.razorpay_payment_id ||
+    !response?.razorpay_signature
+  ) {
+    console.error("Incomplete Razorpay response", response);
+    alert("Payment verification failed. Please try again.");
+    return;
+  }
+        const verifyRes = await fetch(
+          "https://gopbaibklcxxccqinfli.supabase.co/functions/v1/verify-razorpay-payment",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              user_id: clerkUserId,
+            }),
+          }
+        );
+
+        const verifyData = await verifyRes.json();
+        console.log("Verify:", verifyData);
+
+        if (verifyData.success) {
+          alert("🎉 Premium activated for 30 days!");
+          window.location.reload();
+        } else {
+          alert("Verification failed");
+        }
+      },
+    });
+
+    rzp.open();
+  } catch (err) {
+    console.error(err);
+    alert("Payment failed");
+  }
+};
+
+
+
 
   // 🔹 Check session (debug function)
   const checkSession = async () => {

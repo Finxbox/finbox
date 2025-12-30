@@ -49,6 +49,21 @@ const TermsAndConditions = () => {
         </ul>
       </section>
 
+      {/* Digital Products & Subscription Access */}
+<section className="space-y-3 mb-8">
+  <h2 className="text-xl font-semibold">2.1 Digital Products & Subscription Access</h2>
+  <p>
+    Finxbox offers paid digital products and subscription-based access to
+    premium tools, educational content, and advanced features.
+  </p>
+  <p>
+    Upon successful payment, premium access is granted for a limited duration
+    as specified at the time of purchase. Subscription access does not renew
+    automatically and must be manually renewed by the user.
+  </p>
+</section>
+
+
       {/* No Financial Advice */}
       <section className="space-y-3 mb-8">
         <h2 className="text-xl font-semibold">3. No Financial Advice</h2>
@@ -65,6 +80,20 @@ const TermsAndConditions = () => {
           <li>Must be independently verified before use</li>
         </ul>
       </section>
+
+      {/* No Guaranteed Returns */}
+<section className="space-y-3 mb-8">
+  <h2 className="text-xl font-semibold">3.1 No Guaranteed Returns</h2>
+  <p>
+    Finxbox does not guarantee any financial results, profits, or outcomes
+    from the use of its tools, calculators, or educational materials.
+  </p>
+  <p>
+    All financial decisions made using information from Finxbox are solely
+    at the user’s discretion and risk.
+  </p>
+</section>
+
 
       {/* User Responsibilities */}
       <section className="space-y-3 mb-8">
@@ -106,6 +135,19 @@ const TermsAndConditions = () => {
         </p>
       </section>
 
+{/* Payment Processing */}
+<section className="space-y-3 mb-8">
+  <h2 className="text-xl font-semibold">6.1 Payment Processing</h2>
+  <p>
+    All payments on Finxbox are processed securely through third-party payment
+    gateways such as Razorpay.
+  </p>
+  <p>
+    Finxbox does not store, process, or have access to users’ card details,
+    banking information, or payment credentials.
+  </p>
+</section>
+
       {/* Third-Party Links */}
       <section className="space-y-3 mb-8">
         <h2 className="text-xl font-semibold">7. Third-Party Links</h2>
@@ -136,6 +178,24 @@ const TermsAndConditions = () => {
         </ul>
       </section>
 
+      {/* Refund & Cancellation Policy */}
+<section className="space-y-3 mb-8">
+  <h2 className="text-xl font-semibold">8.1 Refund & Cancellation Policy</h2>
+  <p>
+    Finxbox offers digital products and subscription-based access with instant
+    delivery of services upon successful payment.
+  </p>
+  <p>
+    Due to the nature of digital content and immediate access, payments once
+    successfully processed are non-refundable and non-cancellable.
+  </p>
+  <p>
+    Users are advised to review product details carefully before completing
+    a purchase.
+  </p>
+</section>
+
+
       {/* Indemnification */}
       <section className="space-y-3 mb-8">
         <h2 className="text-xl font-semibold">9. Indemnification</h2>
@@ -155,6 +215,20 @@ const TermsAndConditions = () => {
         </p>
       </section>
 
+      {/* Subscription Expiry */}
+<section className="space-y-3 mb-8">
+  <h2 className="text-xl font-semibold">10.1 Subscription Expiry</h2>
+  <p>
+    Premium subscriptions on Finxbox are valid only for the duration specified
+    at the time of purchase.
+  </p>
+  <p>
+    Access to premium features automatically expires once the subscription
+    period ends, unless renewed by the user through a new payment.
+  </p>
+</section>
+
+
       {/* Governing Law */}
       <section className="space-y-3 mb-8">
         <h2 className="text-xl font-semibold">11. Governing Law</h2>
@@ -172,6 +246,20 @@ const TermsAndConditions = () => {
           the website constitutes acceptance of the updated Terms.
         </p>
       </section>
+
+      {/* Pricing & Charges */}
+<section className="space-y-3 mb-8">
+  <h2 className="text-xl font-semibold">14. Pricing & Charges</h2>
+  <p>
+    All prices displayed on Finxbox are inclusive of applicable taxes unless
+    stated otherwise.
+  </p>
+  <p>
+    Finxbox reserves the right to change pricing, features, or subscription
+    plans at any time without prior notice.
+  </p>
+</section>
+
 
       {/* Contact */}
       <section className="space-y-3">

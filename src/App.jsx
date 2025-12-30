@@ -18,6 +18,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import CookiePolicy from "./pages/CookiePolicy";
 import PremiumJournal from "./pages/PremiumJournal";
+import ContactUs from "./pages/ContactUs";
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -65,6 +66,9 @@ const App = () => {
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
       <Route path="/cookie-policy" element={<CookiePolicy />} />
+            <Route path="/contact-us" element={<ContactUs />} />
+
+
 
     </Routes>
   );

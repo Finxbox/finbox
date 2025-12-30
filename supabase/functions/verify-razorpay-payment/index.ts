@@ -1,99 +1,130 @@
 // @ts-nocheck
-const startPayment = async () => {
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import crypto from "node:crypto";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+serve(async (req) => {
+  console.log("VERIFY FUNCTION HIT");
+
+  // ✅ Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  if (req.method !== "POST") {
+    return new Response(
+      JSON.stringify({ success: false, error: "Method not allowed" }),
+      { status: 405, headers: corsHeaders }
+    );
+  }
+
   try {
-    if (!isSignedIn || !user) {
-      const shouldLogin = confirm("Please login to unlock premium features. Would you like to login now?");
-      if (shouldLogin) {
-        openSignIn();
-      }
-      return;
+    // 1️⃣ Safe JSON parsing
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid JSON body" }),
+        { status: 400, headers: corsHeaders }
+      );
     }
 
-    const clerkUserId = user.id;
-    console.log("Clerk user ID:", clerkUserId);
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      user_id, // Clerk user ID
+    } = body;
 
-    // 1️⃣ Create order
-    const res = await fetch(
-      "https://gopbaibklcxxccqinfli.supabase.co/functions/v1/create-razorpay-order",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: 49900 }),
-      }
+    console.log("VERIFY PAYLOAD:", {
+      razorpay_order_id,
+      razorpay_payment_id,
+      user_id,
+    });
+
+    // 2️⃣ Validate payload
+    if (
+      !razorpay_order_id ||
+      !razorpay_payment_id ||
+      !razorpay_signature ||
+      !user_id
+    ) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing payment fields" }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // 3️⃣ Verify Razorpay signature
+    const razorpaySecret = Deno.env.get("RAZORPAY_KEY_SECRET");
+    if (!razorpaySecret) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Razorpay secret not set" }),
+        { status: 500, headers: corsHeaders }
+      );
+    }
+
+    const generatedSignature = crypto
+      .createHmac("sha256", razorpaySecret)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest("hex");
+
+    if (generatedSignature !== razorpay_signature) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid signature" }),
+        { status: 401, headers: corsHeaders }
+      );
+    }
+
+    // 4️⃣ Create Supabase client (SERVICE ROLE)
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL"),
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
     );
 
-    const order = await res.json();
-    if (!order.orderId) throw new Error("Order creation failed");
+    // 5️⃣ Calculate expiry (30 days)
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 30);
 
-    // 2️⃣ Razorpay Checkout
-    const rzp = new window.Razorpay({
-      key: order.key || "rzp_test_Rx2I5u0o0EHnwe",
-      amount: order.amount,
-      currency: order.currency,
-      name: "Finxbox Portfolio Pro",
-      description: "Premium Portfolio Management (₹499)",
-      order_id: order.orderId,
-      handler: async (response) => {
-        console.log("Payment success response:", response);
-        
-        // 3️⃣ Verify payment
-        try {
-          const verifyRes = await fetch(
-            "https://gopbaibklcxxccqinfli.supabase.co/functions/v1/verify-razorpay-payment",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                clerk_user_id: clerkUserId, // Use clerk_user_id
-              }),
-            }
-          );
+    // 6️⃣ UPSERT premium status
+    const { error } = await supabase
+      .from("user_profiles")
+      .upsert({
+        id: user_id,
+        is_premium: true,
+        subscription_end_date: expiryDate.toISOString(),
+      });
 
-          const verifyData = await verifyRes.json();
-          console.log("Verification response:", verifyData);
-          
-          if (verifyData.success) {
-            alert("🎉 Premium unlocked! Welcome to Portfolio Pro.");
-            setIsPremium(true);
-            setShowUpgradeModal(false);
-            // Refresh page to update premium status
-            setTimeout(() => window.location.reload(), 1500);
-          } else {
-            alert(`Payment verification failed: ${verifyData.error || "Unknown error"}`);
-          }
-        } catch (verifyError) {
-          console.error("Verification error:", verifyError);
-          alert("Verification failed. Please contact support with payment ID: " + response.razorpay_payment_id);
-        }
-      },
-      prefill: {
-        name: user.fullName || "",
-        email: user.primaryEmailAddress?.emailAddress || "",
-        contact: user.primaryPhoneNumber?.phoneNumber || "",
-      },
-      theme: { 
-        color: "#6366f1",
-        hide_topbar: false 
-      },
-      modal: {
-        ondismiss: function() {
-          console.log("Checkout closed by user");
-        }
-      }
-    });
+    if (error) {
+      console.error("DB error:", error);
+      return new Response(
+        JSON.stringify({ success: false, error: "Database update failed" }),
+        { status: 500, headers: corsHeaders }
+      );
+    }
 
-    rzp.on('payment.failed', function (response) {
-      console.error("Payment failed:", response.error);
-      alert(`Payment failed: ${response.error.description || "Unknown error"}`);
-    });
-
-    rzp.open();
-    
+    // 7️⃣ Success
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Premium activated for 30 days",
+        subscription_end_date: expiryDate.toISOString(),
+      }),
+      { status: 200, headers: corsHeaders }
+    );
   } catch (err) {
-    console.error("Payment error:", err);
-    alert("Payment failed. Please try again.");
+    console.error("Verify payment error:", err);
+    return new Response(
+      JSON.stringify({ success: false, error: "Server error" }),
+      { status: 500, headers: corsHeaders }
+    );
   }
-};
+});

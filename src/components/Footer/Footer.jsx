@@ -60,6 +60,14 @@ const Footer = () => {
                     Cookie Policy
                   </a>
                 </li>
+                  <li>
+                  <a
+                    href="/contact-us"
+                    className="text-gray-600 hover:text-gray-900 transition"
+                  >
+                    Contact Us
+                  </a>
+                </li>
               </ul>
             </div>
 

@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShieldCheck, BarChart3, GraduationCap } from "lucide-react";
+import Seo from "../components/Seo";
+
 
 /* ================= ANIMATION VARIANTS ================= */
 

@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import PortfolioCalculator from "./pages/PortfolioCalculator";
 import PositionSizeCalculator from "./pages/PositionSizeCalculator";
 import Loading from "./components/Loader/Loading";
+import { Helmet } from "react-helmet-async";
 
 import ToolsLayout from "./Layouts/ToolsLayout";
 import StoreLayout from "./Layouts/StoreLayout";
@@ -19,6 +20,7 @@ import TermsAndConditions from "./pages/TermsAndConditions";
 import CookiePolicy from "./pages/CookiePolicy";
 import PremiumJournal from "./pages/PremiumJournal";
 import ContactUs from "./pages/ContactUs";
+
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);

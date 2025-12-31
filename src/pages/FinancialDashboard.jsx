@@ -1,6 +1,8 @@
 // FinancialDashboard.jsx
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import Plot from 'react-plotly.js';
+import * as XLSX from 'xlsx';
+import Papa from 'papaparse';
 import { 
   Upload, FileText, TrendingUp, Shield, ArrowLeft,
   DollarSign, TrendingDown, PieChart, BarChart3,
@@ -18,9 +20,8 @@ import {
 import { Link } from 'react-router-dom';
 import DematCTA from "../components/utility/DematCTA.jsx";
 
-// ==================== UNIVERSAL BANK PARSER & UTILITIES ====================
+// ==================== CONFIGURATION ====================
 
-// Payment configuration
 const PAYMENT_CONFIG = {
   freeTier: {
     maxTransactions: 100,
@@ -36,7 +37,6 @@ const PAYMENT_CONFIG = {
   }
 };
 
-// Bank detection patterns
 const BANK_PATTERNS = [
   { name: 'HDFC BANK', keywords: ['hdfc', 'hdfc bank'], patterns: [/hdfc/i, /hdfc bank/i] },
   { name: 'ICICI BANK', keywords: ['icici', 'icici bank'], patterns: [/icici/i, /icici bank/i] },
@@ -52,7 +52,31 @@ const BANK_PATTERNS = [
   { name: 'CITIBANK', keywords: ['citibank'], patterns: [/citibank/i] },
 ];
 
-// Financial Utility Functions
+const CATEGORY_KEYWORDS = {
+  'Salary': ['salary', 'payroll', 'wages', 'income', 'stipend'],
+  'Interest Income': ['interest', 'dividend', 'bank interest'],
+  'Business Income': ['client', 'freelance', 'consulting', 'business', 'contract'],
+  'Refunds': ['refund', 'reversal', 'chargeback'],
+  'Food & Groceries': ['grocery', 'supermarket', 'food', 'vegetable', 'kirana', 'dmart'],
+  'Dining Out': ['restaurant', 'cafe', 'dining', 'zomato', 'swiggy', 'eatsure'],
+  'Housing': ['rent', 'housing', 'maintenance', 'society', 'house'],
+  'Utilities': ['electricity', 'water', 'utility', 'bill', 'gas', 'cylinder', 'telephone'],
+  'Transportation': ['fuel', 'petrol', 'diesel', 'transport', 'uber', 'ola', 'rapido'],
+  'Healthcare': ['medical', 'hospital', 'pharmacy', 'doctor', 'medicine', 'apollo'],
+  'Entertainment': ['movie', 'entertainment', 'netflix', 'spotify', 'hotstar', 'prime'],
+  'Shopping': ['shopping', 'mall', 'amazon', 'flipkart', 'myntra', 'nykaa'],
+  'Loan Repayment': ['loan', 'emi', 'repayment', 'home loan', 'car loan'],
+  'Insurance': ['insurance', 'premium', 'lic', 'policy'],
+  'Investments': ['investment', 'mutual', 'stock', 'share', 'sip', 'nps'],
+  'Transfers': ['transfer', 'neft', 'rtgs', 'imps', 'upi', 'to ', 'from '],
+  'Taxes': ['tax', 'gst', 'tds', 'income tax'],
+  'Education': ['school', 'college', 'tuition', 'course', 'education'],
+  'Travel': ['flight', 'hotel', 'travel', 'trip', 'vacation'],
+  'Personal Care': ['salon', 'spa', 'beauty', 'gym', 'fitness']
+};
+
+// ==================== UTILITY FUNCTIONS ====================
+
 export const parseAmount = (v) => {
   if (v === null || v === undefined || v === "") return 0;
   if (typeof v === 'number') return Math.abs(v);
@@ -78,9 +102,7 @@ export const toINR = (n) => {
   }
 };
 
-export const safeStr = (v) => {
-  return (v ?? '').toString().trim();
-};
+export const safeStr = (v) => (v ?? '').toString().trim();
 
 export const parseDateFlexible = (s) => {
   if (!s) return null;
@@ -96,6 +118,13 @@ export const parseDateFlexible = (s) => {
     }},
     { pattern: /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/, handler: (match) => 
       new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]))
+    },
+    { pattern: /^(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})$/i, 
+      handler: (match) => {
+        const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+        const month = months.indexOf(match[2].toLowerCase().substring(0,3));
+        return new Date(parseInt(match[3]), month, parseInt(match[1]));
+      }
     },
   ];
   
@@ -117,331 +146,11 @@ export const parseDateFlexible = (s) => {
   return null;
 };
 
-export const monthKey = (dt) => {
-  return dt ? `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}` : 'Unknown';
-};
+export const monthKey = (dt) => dt ? `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}` : 'Unknown';
 
-export const detectBankFromData = (rows) => {
-  if (!Array.isArray(rows) || rows.length === 0) return 'Unknown';
-  
-  const sample = JSON.stringify(rows.slice(0, 3)).toLowerCase();
-  
-  for (const { name, keywords } of BANK_PATTERNS) {
-    if (keywords.some(keyword => sample.includes(keyword))) {
-      return name;
-    }
-  }
-  
-  return 'Unknown Bank';
-};
+// ==================== ENHANCED UNIVERSAL BANK PARSER ====================
 
-// Transaction categorization
-const CATEGORY_KEYWORDS = {
-  'Salary': ['salary', 'payroll', 'wages', 'income', 'stipend'],
-  'Interest Income': ['interest', 'dividend', 'bank interest'],
-  'Business Income': ['client', 'freelance', 'consulting', 'business', 'contract'],
-  'Refunds': ['refund', 'reversal', 'chargeback'],
-  'Food & Groceries': ['grocery', 'supermarket', 'food', 'vegetable', 'kirana', 'dmart'],
-  'Dining Out': ['restaurant', 'cafe', 'dining', 'zomato', 'swiggy', 'eatsure'],
-  'Housing': ['rent', 'housing', 'maintenance', 'society', 'house'],
-  'Utilities': ['electricity', 'water', 'utility', 'bill', 'gas', 'cylinder', 'telephone'],
-  'Transportation': ['fuel', 'petrol', 'diesel', 'transport', 'uber', 'ola', 'rapido'],
-  'Healthcare': ['medical', 'hospital', 'pharmacy', 'doctor', 'medicine', 'apollo'],
-  'Entertainment': ['movie', 'entertainment', 'netflix', 'spotify', 'hotstar', 'prime'],
-  'Shopping': ['shopping', 'mall', 'amazon', 'flipkart', 'myntra', 'nykaa'],
-  'Loan Repayment': ['loan', 'emi', 'repayment', 'home loan', 'car loan'],
-  'Insurance': ['insurance', 'premium', 'lic', 'policy'],
-  'Investments': ['investment', 'mutual', 'stock', 'share', 'sip', 'nps'],
-  'Transfers': ['transfer', 'neft', 'rtgs', 'imps', 'upi', 'to ', 'from '],
-  'Taxes': ['tax', 'gst', 'tds', 'income tax'],
-  'Education': ['school', 'college', 'tuition', 'course', 'education'],
-  'Travel': ['flight', 'hotel', 'travel', 'trip', 'vacation'],
-  'Personal Care': ['salon', 'spa', 'beauty', 'gym', 'fitness']
-};
-
-export const categorizeTransaction = (particulars, type, credit, debit) => {
-  const particularsLower = particulars.toLowerCase();
-  
-  for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-    for (const keyword of keywords) {
-      if (particularsLower.includes(keyword.toLowerCase())) {
-        return category;
-      }
-    }
-  }
-  
-  if (type === 'INCOME' || credit > 0) return 'Other Income';
-  if (type === 'EXPENSE' || debit > 0) return 'Other Expenses';
-  
-  return 'Uncategorized';
-};
-
-export const normalizeData = (rawRows) => {
-  const out = [];
-  
-  for (const r of rawRows) {
-    if (!r || typeof r !== 'object') continue;
-    
-    const row = {
-      date: safeStr(r.DATE || r.date || r.Date),
-      month: safeStr(r.MONTH || r.month || r.Month),
-      particulars: safeStr(r.PARTICULARS || r.particulars || r.Particulars || r.narration || r.description),
-      debit: parseAmount(r.DEBIT || r.debit || r.Debit || r.Withdrawal),
-      credit: parseAmount(r.CREDIT || r.credit || r.Credit || r.Deposit),
-      type: safeStr(r.TYPE || r.type || r.Type || ''),
-      category: safeStr(r.CATEGORY || r.category || r.Category || ''),
-      bank: safeStr(r['BANK A/C'] || r.bank || r.Bank || 'Unknown')
-    };
-    
-    if (!row.type || row.type.toUpperCase() === 'UNKNOWN') {
-      if (row.credit > 0 && row.debit === 0) {
-        row.type = 'INCOME';
-      } else if (row.debit > 0 && row.credit === 0) {
-        row.type = 'EXPENSE';
-      } else {
-        const particularsLower = row.particulars.toLowerCase();
-        if (particularsLower.includes('cr') || particularsLower.includes('credit')) {
-          row.type = 'INCOME';
-        } else if (particularsLower.includes('dr') || particularsLower.includes('debit')) {
-          row.type = 'EXPENSE';
-        } else {
-          row.type = 'UNKNOWN';
-        }
-      }
-    }
-    
-    if (!row.category) {
-      row.category = categorizeTransaction(row.particulars, row.type, row.credit, row.debit);
-    }
-    
-    row._dt = parseDateFlexible(row.date);
-    row._ym = monthKey(row._dt);
-    
-    if (!row.month && row._dt) {
-      row.month = row._dt.toLocaleString('default', { month: 'long' });
-    }
-    
-    if (row._dt && (row.debit > 0 || row.credit > 0)) {
-      out.push(row);
-    }
-  }
-  
-  out.sort((a, b) => {
-    const aTime = a._dt?.getTime() || 0;
-    const bTime = b._dt?.getTime() || 0;
-    return aTime - bTime;
-  });
-  
-  return out;
-};
-
-export const generateIncomeStatement = (data) => {
-  const incomeRows = data.filter(r => 
-    r.credit > 0 && 
-    !r.type.includes('TRANSFER') && 
-    !r.category.includes('Transfer')
-  );
-  
-  const expenseRows = data.filter(r => 
-    r.debit > 0 && 
-    !r.type.includes('TRANSFER') && 
-    !r.category.includes('Transfer')
-  );
-  
-  const totalIncome = incomeRows.reduce((sum, r) => sum + r.credit, 0);
-  const totalExpenses = expenseRows.reduce((sum, r) => sum + r.debit, 0);
-  const netIncome = totalIncome - totalExpenses;
-  
-  return { 
-    totalIncome, 
-    totalExpenses, 
-    netIncome,
-    incomeCount: incomeRows.length,
-    expenseCount: expenseRows.length
-  };
-};
-
-export const generateCashFlowStatement = (data) => {
-  const operatingIncome = data
-    .filter(r => r.credit > 0 && 
-               !r.category.includes('Investment') && 
-               !r.category.includes('Loan') &&
-               !r.category.includes('Transfer') &&
-               !r.type.includes('TRANSFER'))
-    .reduce((sum, r) => sum + r.credit, 0);
-  
-  const operatingExpenses = data
-    .filter(r => r.debit > 0 && 
-               !r.category.includes('Investment') && 
-               !r.category.includes('Loan') &&
-               !r.category.includes('Transfer') &&
-               !r.type.includes('TRANSFER'))
-    .reduce((sum, r) => sum + r.debit, 0);
-  
-  const investingCashFlow = data
-    .filter(r => r.category.includes('Investment'))
-    .reduce((sum, r) => sum + (r.credit - r.debit), 0);
-  
-  const financingCashFlow = data
-    .filter(r => r.category.includes('Loan'))
-    .reduce((sum, r) => sum + (r.credit - r.debit), 0);
-  
-  const netCashFlow = operatingIncome - operatingExpenses + investingCashFlow + financingCashFlow;
-  
-  return {
-    operatingCashFlow: operatingIncome - operatingExpenses,
-    investingCashFlow,
-    financingCashFlow,
-    netCashFlow
-  };
-};
-
-export const generateBalanceSheet = (data, netIncome) => {
-  const cashBalance = data.reduce((sum, r) => sum + r.credit - r.debit, 0);
-  
-  const investments = data
-    .filter(r => r.category.includes('Investment') && r.debit > 0)
-    .reduce((sum, r) => sum + r.debit, 0);
-  
-  const totalAssets = Math.max(0, cashBalance) + investments;
-  
-  const loans = data
-    .filter(r => r.category.includes('Loan') && r.credit > 0)
-    .reduce((sum, r) => sum + r.credit, 0);
-  
-  const totalLiabilities = loans;
-  const totalEquity = netIncome;
-  
-  return { 
-    totalAssets, 
-    totalLiabilities, 
-    totalEquity,
-    cashBalance: Math.max(0, cashBalance),
-    investments
-  };
-};
-
-// File processing utilities
-export const processFiles = async (files) => {
-  const allData = [];
-  let detectedBank = 'Unknown';
-  
-  for (const file of files) {
-    try {
-      const fileData = await readFile(file);
-      
-      if (fileData.length > 0) {
-        const bank = detectBankFromData(fileData);
-        if (bank !== 'Unknown') {
-          detectedBank = bank;
-        }
-        
-        const enhancedData = fileData.map(row => ({
-          ...row,
-          'BANK DETECTED': detectedBank
-        }));
-        
-        allData.push(...enhancedData);
-      }
-      
-    } catch (error) {
-      console.error(`Error processing file ${file.name}:`, error);
-      throw new Error(`Error processing file ${file.name}: ${error.message}`);
-    }
-  }
-  
-  return allData;
-};
-
-async function readFile(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    
-    reader.onload = function(e) {
-      try {
-        const content = e.target.result;
-        let data = [];
-        
-        const fileName = file.name.toLowerCase();
-        
-        if (fileName.endsWith('.json')) {
-          const json = JSON.parse(content);
-          data = Array.isArray(json) ? json : (json.data || []);
-        } else if (fileName.endsWith('.csv')) {
-          const results = Papa.parse(content, {
-            header: true,
-            skipEmptyLines: true,
-            transformHeader: (header) => header.trim(),
-            skipEmptyLines: 'greedy'
-          });
-          data = results.data;
-        } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
-          const workbook = XLSX.read(content, { 
-            type: 'binary',
-            cellDates: true,
-            cellStyles: true
-          });
-          
-          let sheetName = workbook.SheetNames[0];
-          for (const name of workbook.SheetNames) {
-            const worksheet = workbook.Sheets[name];
-            const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            if (sheetData.length > 2 && sheetData[0] && sheetData[0].length >= 3) {
-              sheetName = name;
-              break;
-            }
-          }
-          
-          const worksheet = workbook.Sheets[sheetName];
-          const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-          let headerRow = 0;
-          
-          for (let i = 0; i < Math.min(rawData.length, 10); i++) {
-            const row = rawData[i];
-            if (Array.isArray(row)) {
-              const rowString = row.join(' ').toLowerCase();
-              if (rowString.includes('date') && 
-                  (rowString.includes('amount') || rowString.includes('debit') || rowString.includes('credit'))) {
-                headerRow = i;
-                break;
-              }
-            }
-          }
-          
-          data = XLSX.utils.sheet_to_json(worksheet, { header: headerRow });
-        } else {
-          reject(new Error(`Unsupported file format: ${file.name}`));
-          return;
-        }
-        
-        data = data.filter(row => {
-          if (!row || typeof row !== 'object') return false;
-          const values = Object.values(row);
-          return values.some(v => v !== null && v !== undefined && v !== '');
-        });
-        
-        resolve(data);
-      } catch (error) {
-        reject(error);
-      }
-    };
-    
-    reader.onerror = function() {
-      reject(new Error('Failed to read file'));
-    };
-    
-    const fileName = file.name.toLowerCase();
-    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
-      reader.readAsBinaryString(file);
-    } else {
-      reader.readAsText(file);
-    }
-  });
-}
-
-// ==================== UNIVERSAL BANK PARSER COMPONENT ====================
-
-class UniversalBankParser {
+class EnhancedUniversalBankParser {
   constructor() {
     this.transactions = [];
     this.metadata = {
@@ -454,7 +163,10 @@ class UniversalBankParser {
   }
 
   detectBank(content) {
-    const contentLower = content.toLowerCase();
+    if (!content) return 'Unknown Bank';
+    
+    const contentLower = typeof content === 'string' ? content.toLowerCase() : JSON.stringify(content).toLowerCase();
+    
     for (const bank of BANK_PATTERNS) {
       for (const pattern of bank.patterns) {
         if (pattern.test(contentLower)) {
@@ -466,178 +178,363 @@ class UniversalBankParser {
   }
 
   parseDate(dateString) {
-    if (!dateString) return null;
-    
-    const cleaned = dateString.toString().trim();
-    const datePatterns = [
-      { pattern: /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/, handler: (match) => 
-        new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1])) 
-      },
-      { pattern: /^(\d{1,2})[-/](\d{1,2})[-/](\d{2})$/, handler: (match) => {
-        const year = parseInt(match[3]) < 30 ? 2000 + parseInt(match[3]) : 1900 + parseInt(match[3]);
-        return new Date(year, parseInt(match[2]) - 1, parseInt(match[1]));
-      }},
-      { pattern: /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/, handler: (match) => 
-        new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]))
-      },
-    ];
-    
-    for (const { pattern, handler } of datePatterns) {
-      const match = cleaned.match(pattern);
-      if (match) {
-        try {
-          const date = handler(match);
-          if (!isNaN(date.getTime())) return date;
-        } catch (e) {}
-      }
-    }
-    
-    try {
-      const date = new Date(cleaned);
-      if (!isNaN(date.getTime())) return date;
-    } catch (e) {}
-    
-    return null;
+    return parseDateFlexible(dateString);
   }
 
-  parseAmount(amountString) {
-    if (!amountString) return { credit: 0, debit: 0 };
+  parseAmountEnhanced(amountString) {
+    if (!amountString && amountString !== 0) return { value: 0, type: 'unknown' };
     
-    const cleaned = amountString
-      .toString()
-      .replace(/[₹$,()\s]/g, '')
-      .trim();
+    const str = amountString.toString().trim();
+    const cleaned = str.replace(/[₹$€£,()\s]/g, '');
     
-    const isCredit = /cr|credit|deposit|cr\)/i.test(amountString) || amountString.includes('Cr');
-    const isDebit = /dr|debit|withdrawal|dr\)/i.test(amountString) || amountString.includes('Dr');
+    const isCredit = /cr|credit|deposit|receipt|inward|credited|received|refund|c/i.test(str.toLowerCase());
+    const isDebit = /dr|debit|withdrawal|payment|outward|debited|paid|purchase|d/i.test(str.toLowerCase());
     
     const amountMatch = cleaned.match(/(-?\d+\.?\d*)/);
-    if (!amountMatch) return { credit: 0, debit: 0 };
+    if (!amountMatch) return { value: 0, type: 'unknown' };
     
-    let amount = parseFloat(amountMatch[1]);
-    if (isNaN(amount)) return { credit: 0, debit: 0 };
+    let value = parseFloat(amountMatch[1]);
+    if (isNaN(value)) value = 0;
     
-    if (isCredit) {
-      return { credit: Math.abs(amount), debit: 0 };
-    } else if (isDebit) {
-      return { credit: 0, debit: Math.abs(amount) };
-    } else {
-      if (cleaned.startsWith('-') || amountString.includes('Dr')) {
-        return { credit: 0, debit: Math.abs(amount) };
-      } else {
-        return { credit: Math.abs(amount), debit: 0 };
+    value = Math.abs(value);
+    
+    let type = 'unknown';
+    if (isCredit) type = 'credit';
+    if (isDebit) type = 'debit';
+    
+    if (type === 'unknown') {
+      if (cleaned.startsWith('-') || str.includes('Dr')) {
+        type = 'debit';
+      } else if (str.includes('Cr') || str.includes('+')) {
+        type = 'credit';
+      } else if (value > 0) {
+        type = str.toLowerCase().includes('withdrawal') ? 'debit' : 'credit';
       }
     }
+    
+    return { value, type };
   }
 
   categorizeTransaction(description) {
     if (!description) return 'Uncategorized';
     const desc = description.toLowerCase();
     
-    const categories = {
-      'Salary': [/salary/i, /payroll/i],
-      'Food & Dining': [/food/i, /restaurant/i, /zomato/i, /swiggy/i, /cafe/i],
-      'Groceries': [/grocery/i, /supermarket/i, /dmart/i],
-      'Fuel': [/fuel/i, /petrol/i, /diesel/i],
-      'Rent': [/rent/i, /housing/i],
-      'Utilities': [/electricity/i, /water/i, /bill/i, /utility/i],
-      'Healthcare': [/medical/i, /hospital/i, /pharmacy/i],
-      'Entertainment': [/movie/i, /entertainment/i, /netflix/i],
-      'Shopping': [/shopping/i, /amazon/i, /flipkart/i],
-      'Loan': [/loan/i, /emi/i],
-      'Insurance': [/insurance/i, /premium/i],
-      'Investment': [/investment/i, /mutual/i, /stock/i],
-      'Taxes': [/tax/i, /tds/i, /gst/i],
-      'Travel': [/travel/i, /flight/i, /hotel/i],
-      'Education': [/education/i, /school/i, /college/i],
-    };
-    
-    for (const [category, patterns] of Object.entries(categories)) {
-      if (patterns.some(pattern => pattern.test(desc))) {
-        return category;
+    for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+      for (const keyword of keywords) {
+        if (desc.includes(keyword.toLowerCase())) {
+          return category;
+        }
       }
     }
     
     return 'Other';
   }
 
+  // Enhanced PDF processing with watermark handling
   async processPDF(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
+    try {
+      // Dynamic import of pdfjs-dist
+      const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
       
-      reader.onload = async function(e) {
-        try {
-          const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
-          
-          pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-            'pdfjs-dist/build/pdf.worker.mjs',
-            import.meta.url
-          ).toString();
-          
-          const loadingTask = pdfjsLib.getDocument({ data: e.target.result });
-          const pdf = await loadingTask.promise;
-          
-          let fullText = '';
-          
-          for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const textContent = await page.getTextContent();
-            const pageText = textContent.items.map(item => item.str).join(' ');
-            fullText += pageText + '\n';
-          }
-          
-          const bankName = this.detectBank(fullText);
-          const transactions = this.parseTransactionsFromText(fullText, bankName);
-          
-          resolve({
-            transactions,
-            metadata: {
-              bankName,
-              accountNumber: null,
-              period: null,
-              totalTransactions: transactions.length,
-              fileType: 'PDF'
-            }
-          });
-          
-        } catch (error) {
-          reject(error);
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      
+      let fullText = '';
+      const transactions = [];
+      
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 1.5 });
+        
+        const textContent = await page.getTextContent({
+          disableCombineTextItems: false,
+          includeMarkedContent: true
+        });
+        
+        // Extract structured text with watermark filtering
+        const pageText = this.extractStructuredText(textContent, viewport);
+        fullText += pageText + '\n\n';
+        
+        // Try table extraction
+        const tableData = this.extractTableData(textContent, viewport);
+        if (tableData.length > 0) {
+          transactions.push(...tableData);
         }
-      }.bind(this);
+      }
       
-      reader.onerror = reject;
-      reader.readAsArrayBuffer(file);
-    });
+      // Fallback to text parsing if no structured data found
+      if (transactions.length === 0) {
+        const textTransactions = this.parseTextTransactions(fullText);
+        transactions.push(...textTransactions);
+      }
+      
+      // Clean and validate
+      const cleanedTransactions = this.cleanAndValidateTransactions(transactions);
+      
+      // Detect bank
+      const bankName = this.detectBank(fullText);
+      
+      return {
+        transactions: cleanedTransactions,
+        metadata: {
+          bankName,
+          accountNumber: this.extractAccountNumber(fullText),
+          period: this.extractPeriod(fullText),
+          totalTransactions: cleanedTransactions.length,
+          fileType: 'PDF'
+        }
+      };
+      
+    } catch (error) {
+      console.error('PDF processing error:', error);
+      throw new Error(`Failed to process PDF: ${error.message}`);
+    }
   }
 
-  parseTransactionsFromText(text, bankName) {
+  extractStructuredText(textContent, viewport) {
+    const lines = {};
+    
+    textContent.items.forEach(item => {
+      const y = Math.round(item.transform[5]);
+      const x = Math.round(item.transform[4]);
+      
+      // Filter watermarks and headers/footers
+      if (item.height < 6 || item.width < 2) return; // Too small (watermarks)
+      if (x < 30 || x > viewport.width - 30) return; // Edge of page
+      if (y < 50 || y > viewport.height - 50) return; // Top/bottom margins
+      
+      if (!lines[y]) lines[y] = [];
+      lines[y].push({ text: item.str, x });
+    });
+    
+    // Build text line by line
+    const sortedYs = Object.keys(lines).sort((a, b) => b - a); // Top to bottom
+    let result = '';
+    
+    sortedYs.forEach(y => {
+      const lineItems = lines[y].sort((a, b) => a.x - b.x);
+      const lineText = lineItems.map(item => item.text).join(' ');
+      
+      // Skip lines that look like watermarks
+      const lowerText = lineText.toLowerCase();
+      const watermarkPatterns = [
+        'confidential', 'draft', 'sample', 'copy of',
+        'page', '©', 'watermark', 'statement copy'
+      ];
+      
+      if (!watermarkPatterns.some(pattern => lowerText.includes(pattern))) {
+        result += lineText + '\n';
+      }
+    });
+    
+    return result;
+  }
+
+  extractTableData(textContent, viewport) {
+    const transactions = [];
+    
+    // Group by approximate y position (allowing some tolerance)
+    const yGroups = {};
+    const yTolerance = 3;
+    
+    textContent.items.forEach(item => {
+      if (item.height < 8) return; // Skip very small text
+      
+      const y = Math.round(item.transform[5] / yTolerance) * yTolerance;
+      if (!yGroups[y]) yGroups[y] = [];
+      yGroups[y].push({
+        text: item.str,
+        x: item.transform[4],
+        width: item.width
+      });
+    });
+    
+    // Sort y positions top to bottom
+    const sortedYs = Object.keys(yGroups).sort((a, b) => b - a);
+    
+    // Look for table structure
+    let inTable = false;
+    let tableRows = [];
+    
+    sortedYs.forEach(y => {
+      const items = yGroups[y];
+      if (items.length < 2) return; // Need at least 2 columns for a table
+      
+      // Check if this looks like a table row
+      items.sort((a, b) => a.x - b.x);
+      
+      // Check for typical table patterns
+      const hasDate = items.some(item => this.isDateLike(item.text));
+      const hasAmount = items.some(item => this.isAmountLike(item.text));
+      const hasDescription = items.some(item => 
+        item.text && item.text.length > 3 && 
+        !this.isDateLike(item.text) && 
+        !this.isAmountLike(item.text)
+      );
+      
+      if ((hasDate && hasAmount) || (hasDate && hasDescription)) {
+        if (!inTable) {
+          inTable = true;
+        }
+        tableRows.push({ y, items });
+      } else if (inTable) {
+        // Process collected table rows
+        if (tableRows.length >= 2) {
+          const tableTransactions = this.parseTableRows(tableRows);
+          transactions.push(...tableTransactions);
+        }
+        tableRows = [];
+        inTable = false;
+      }
+    });
+    
+    // Process any remaining rows
+    if (tableRows.length >= 2) {
+      const tableTransactions = this.parseTableRows(tableRows);
+      transactions.push(...tableTransactions);
+    }
+    
+    return transactions;
+  }
+
+  isDateLike(text) {
+    if (!text || text.length < 6) return false;
+    
+    const datePatterns = [
+      /^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{4}$/,
+      /^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2}$/,
+      /^\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2}$/,
+      /^\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4}$/i,
+      /^\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{2}$/i
+    ];
+    
+    return datePatterns.some(pattern => pattern.test(text.trim()));
+  }
+
+  isAmountLike(text) {
+    if (!text) return false;
+    
+    const cleaned = text.replace(/[₹$€£,]/g, '');
+    const amountPatterns = [
+      /^-?\d+\.?\d*$/,
+      /^-?\d+\.?\d*\s*(Cr|Dr)?$/i,
+      /^-?\d+\.?\d*\s*(Credit|Debit)?$/i,
+      /^-?\d+\.?\d*\s*[A-Z]{3}$/i
+    ];
+    
+    return amountPatterns.some(pattern => pattern.test(cleaned.trim()));
+  }
+
+  parseTableRows(tableRows) {
+    const transactions = [];
+    
+    // Sort rows by y position (top to bottom)
+    tableRows.sort((a, b) => b.y - a.y);
+    
+    // Skip header row if present
+    let startRow = 0;
+    const firstRowText = tableRows[0].items.map(i => i.text).join(' ').toLowerCase();
+    const headerWords = ['date', 'particulars', 'narration', 'description', 'debit', 'credit', 'withdrawal', 'deposit', 'balance'];
+    if (headerWords.some(word => firstRowText.includes(word))) {
+      startRow = 1;
+    }
+    
+    for (let i = startRow; i < tableRows.length; i++) {
+      const row = tableRows[i];
+      const items = row.items.sort((a, b) => a.x - b.x);
+      
+      if (items.length < 2) continue;
+      
+      // Try to identify columns
+      let date = null;
+      let description = '';
+      let debit = 0;
+      let credit = 0;
+      
+      // First item is often date
+      if (this.isDateLike(items[0].text)) {
+        date = this.parseDate(items[0].text);
+      }
+      
+      // Last items are often amounts
+      for (let j = items.length - 1; j >= Math.max(1, items.length - 3); j--) {
+        const amountResult = this.parseAmountEnhanced(items[j].text);
+        if (amountResult.value > 0) {
+          if (amountResult.type === 'debit') debit = amountResult.value;
+          if (amountResult.type === 'credit') credit = amountResult.value;
+          break;
+        }
+      }
+      
+      // Middle items are description
+      const descItems = [];
+      for (let j = 1; j < items.length; j++) {
+        if (!this.isDateLike(items[j].text) && !this.isAmountLike(items[j].text)) {
+          descItems.push(items[j].text);
+        }
+      }
+      description = descItems.join(' ').trim();
+      
+      // If no date found, try to extract from description
+      if (!date) {
+        const dateMatch = description.match(/\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}/);
+        if (dateMatch) {
+          date = this.parseDate(dateMatch[0]);
+        }
+      }
+      
+      if (date && (debit > 0 || credit > 0)) {
+        transactions.push({
+          date,
+          dateString: items[0]?.text || '',
+          description: description || 'Transaction',
+          debit,
+          credit,
+          category: this.categorizeTransaction(description),
+          type: credit > 0 ? 'CREDIT' : 'DEBIT',
+          bank: this.metadata.bankName || 'Unknown'
+        });
+      }
+    }
+    
+    return transactions;
+  }
+
+  parseTextTransactions(text) {
     const transactions = [];
     const lines = text.split('\n');
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
-      if (!line || line.length < 10) continue;
+      if (line.length < 10) continue;
       
-      const dateMatch = line.match(/^(\d{1,2}[-\/]\d{1,2}[-\/]\d{4}|\d{4}[-\/]\d{1,2}[-\/]\d{1,2})/);
+      // Look for date at beginning of line
+      const dateMatch = line.match(/^(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{4}|\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2}|\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})/i);
+      
       if (dateMatch) {
-        const date = this.parseDate(dateMatch[0]);
-        const remaining = line.substring(dateMatch[0].length).trim();
+        const dateStr = dateMatch[0];
+        const date = this.parseDate(dateStr);
+        const remaining = line.substring(dateStr.length).trim();
         
-        const amountMatch = remaining.match(/([-+]?\d+\.?\d*\s*(?:Cr|Dr)?)$/i);
+        // Look for amount at end
+        const amountMatch = remaining.match(/([\d,]+\.?\d*\s*(?:Cr|Dr|Credit|Debit)?)$/i);
+        
         if (amountMatch) {
-          const description = remaining.substring(0, remaining.length - amountMatch[0].length).trim();
-          const { credit, debit } = this.parseAmount(amountMatch[0]);
+          const amountStr = amountMatch[0];
+          const description = remaining.substring(0, remaining.length - amountStr.length).trim();
+          const amountResult = this.parseAmountEnhanced(amountStr);
           
-          if (description && (credit > 0 || debit > 0)) {
+          if (date && description && (amountResult.value > 0)) {
             transactions.push({
               date,
-              dateString: dateMatch[0],
+              dateString: dateStr,
               description,
-              credit,
-              debit,
+              debit: amountResult.type === 'debit' ? amountResult.value : 0,
+              credit: amountResult.type === 'credit' ? amountResult.value : 0,
               category: this.categorizeTransaction(description),
-              type: credit > 0 ? 'CREDIT' : 'DEBIT',
-              bank: bankName
+              type: amountResult.type === 'credit' ? 'CREDIT' : 'DEBIT',
+              bank: this.metadata.bankName || 'Unknown'
             });
           }
         }
@@ -647,11 +544,72 @@ class UniversalBankParser {
     return transactions;
   }
 
+  cleanAndValidateTransactions(transactions) {
+    return transactions
+      .filter(t => {
+        if (!t.date) return false;
+        if (t.debit === 0 && t.credit === 0) return false;
+        
+        // Filter out balance entries
+        const descLower = t.description.toLowerCase();
+        const ignorePatterns = [
+          'opening balance',
+          'closing balance',
+          'balance brought forward',
+          'balance carried forward',
+          'total debit',
+          'total credit',
+          'grand total',
+          'page total',
+          'continued'
+        ];
+        
+        return !ignorePatterns.some(pattern => descLower.includes(pattern));
+      })
+      .sort((a, b) => a.date - b.date);
+  }
+
+  extractAccountNumber(text) {
+    const patterns = [
+      /account\s*no\.?\s*[:]?\s*([A-Z0-9\-\s]{8,20})/i,
+      /a\/c\s*no\.?\s*[:]?\s*([A-Z0-9\-\s]{8,20})/i,
+      /account\s*number\s*[:]?\s*([A-Z0-9\-\s]{8,20})/i,
+      /([0-9]{9,18})\s+(?:savings|current|account)/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = text.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+    
+    return null;
+  }
+
+  extractPeriod(text) {
+    const patterns = [
+      /statement\s*period\s*[:]?\s*([0-9]{1,2}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{4})\s*to\s*([0-9]{1,2}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{4})/i,
+      /period\s*[:]?\s*([0-9]{1,2}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{4})\s*-\s*([0-9]{1,2}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{4})/i,
+      /from\s*([0-9]{1,2}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{4})\s*to\s*([0-9]{1,2}[\/\-\.][0-9]{1,2}[\/\-\.][0-9]{4})/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = text.match(pattern);
+      if (match && match[1] && match[2]) {
+        return `${match[1].trim()} to ${match[2].trim()}`;
+      }
+    }
+    
+    return null;
+  }
+
+  // Excel/CSV/JSON processing remains largely the same but with improved parsing
   async processExcel(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       
-      reader.onload = function(e) {
+      reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target.result);
           const workbook = XLSX.read(data, { 
@@ -659,7 +617,8 @@ class UniversalBankParser {
             cellDates: true,
             cellText: false,
             cellNF: false,
-            raw: false
+            raw: false,
+            dense: true
           });
           
           const allTransactions = [];
@@ -668,89 +627,129 @@ class UniversalBankParser {
           workbook.SheetNames.forEach(sheetName => {
             try {
               const worksheet = workbook.Sheets[sheetName];
-              const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: false });
               
-              if (jsonData.length > 0) {
-                let headerRow = 0;
-                for (let i = 0; i < Math.min(jsonData.length, 5); i++) {
-                  const row = jsonData[i];
-                  if (Array.isArray(row)) {
-                    const rowText = row.join(' ').toLowerCase();
-                    if (rowText.includes('date') && (rowText.includes('amount') || rowText.includes('debit') || rowText.includes('credit'))) {
-                      headerRow = i;
-                      break;
-                    }
-                  }
-                }
+              // Convert to JSON with better detection
+              const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+                header: 1, 
+                defval: '', 
+                raw: false,
+                blankrows: false
+              });
+              
+              if (jsonData.length === 0) return;
+              
+              // Auto-detect header row
+              let headerRow = 0;
+              for (let i = 0; i < Math.min(jsonData.length, 10); i++) {
+                const row = jsonData[i];
+                if (!Array.isArray(row)) continue;
                 
-                const headers = jsonData[headerRow] || [];
-                const headerMap = {};
+                const rowText = row.join(' ').toLowerCase();
+                const hasDate = rowText.includes('date') || rowText.includes('trans date');
+                const hasDesc = rowText.includes('desc') || rowText.includes('narration') || rowText.includes('particular');
+                const hasAmount = rowText.includes('amount') || rowText.includes('debit') || rowText.includes('credit');
                 
-                headers.forEach((header, index) => {
-                  if (header) {
-                    const headerStr = header.toString().toLowerCase();
-                    headerMap[headerStr] = index;
-                    
-                    BANK_PATTERNS.forEach(bank => {
-                      if (bank.keywords.some(keyword => headerStr.includes(keyword))) {
-                        bankName = bank.name;
-                      }
-                    });
-                  }
-                });
-                
-                for (let i = headerRow + 1; i < jsonData.length; i++) {
-                  const row = jsonData[i];
-                  if (!row || row.length === 0) continue;
-                  
-                  let date = null;
-                  if (headerMap.date !== undefined) {
-                    date = this.parseDate(row[headerMap.date]);
-                  }
-                  
-                  let description = '';
-                  const descKeys = ['description', 'narration', 'particulars', 'remarks'];
-                  for (const key of descKeys) {
-                    if (headerMap[key] !== undefined && row[headerMap[key]]) {
-                      description = row[headerMap[key]].toString().trim();
-                      break;
-                    }
-                  }
-                  
-                  let credit = 0, debit = 0;
-                  
-                  if (headerMap.credit !== undefined || headerMap.cr !== undefined) {
-                    const col = headerMap.credit !== undefined ? headerMap.credit : headerMap.cr;
-                    credit = this.parseAmount(row[col] || '').credit;
-                  }
-                  
-                  if (headerMap.debit !== undefined || headerMap.dr !== undefined) {
-                    const col = headerMap.debit !== undefined ? headerMap.debit : headerMap.dr;
-                    debit = this.parseAmount(row[col] || '').debit;
-                  }
-                  
-                  if (credit === 0 && debit === 0) {
-                    row.forEach(cell => {
-                      const amount = this.parseAmount(cell);
-                      credit += amount.credit;
-                      debit += amount.debit;
-                    });
-                  }
-                  
-                  if (date && (credit > 0 || debit > 0)) {
-                    allTransactions.push({
-                      date,
-                      dateString: row[headerMap.date] || '',
-                      description: description || 'Transaction',
-                      credit,
-                      debit,
-                      category: this.categorizeTransaction(description),
-                      type: credit > 0 ? 'CREDIT' : 'DEBIT',
-                      bank: bankName
-                    });
-                  }
+                if (hasDate && (hasDesc || hasAmount)) {
+                  headerRow = i;
+                  break;
                 }
               }
+              
+              const headers = jsonData[headerRow] || [];
+              const headerMap = {};
+              
+              headers.forEach((header, index) => {
+                if (header) {
+                  const headerStr = header.toString().toLowerCase().trim();
+                  headerMap[headerStr] = index;
+                  
+                  // Detect bank from header
+                  for (const bank of BANK_PATTERNS) {
+                    if (bank.keywords.some(keyword => headerStr.includes(keyword))) {
+                      bankName = bank.name;
+                    }
+                  }
+                }
+              });
+              
+              // Process data rows
+              for (let i = headerRow + 1; i < jsonData.length; i++) {
+                const row = jsonData[i];
+                if (!Array.isArray(row) || row.length === 0) continue;
+                
+                // Extract data based on header mapping
+                let date = null;
+                let description = '';
+                let debit = 0;
+                let credit = 0;
+                
+                // Find date
+                for (const [key, idx] of Object.entries(headerMap)) {
+                  if (key.includes('date') && row[idx]) {
+                    date = this.parseDate(row[idx]);
+                    break;
+                  }
+                }
+                
+                // Find description
+                const descKeys = Object.keys(headerMap).filter(k => 
+                  k.includes('desc') || k.includes('narration') || 
+                  k.includes('particular') || k.includes('remark') || k.includes('details')
+                );
+                
+                for (const key of descKeys) {
+                  if (row[headerMap[key]]) {
+                    description = row[headerMap[key]].toString().trim();
+                    break;
+                  }
+                }
+                
+                // Find amounts
+                const debitKeys = Object.keys(headerMap).filter(k => 
+                  k.includes('debit') || k.includes('dr') || k.includes('withdrawal')
+                );
+                
+                const creditKeys = Object.keys(headerMap).filter(k => 
+                  k.includes('credit') || k.includes('cr') || k.includes('deposit')
+                );
+                
+                const amountKeys = Object.keys(headerMap).filter(k => 
+                  k.includes('amount') && !k.includes('balance')
+                );
+                
+                // Try debit/credit columns first
+                for (const key of debitKeys) {
+                  const amount = this.parseAmountEnhanced(row[headerMap[key]]);
+                  if (amount.type === 'debit') debit = amount.value;
+                }
+                
+                for (const key of creditKeys) {
+                  const amount = this.parseAmountEnhanced(row[headerMap[key]]);
+                  if (amount.type === 'credit') credit = amount.value;
+                }
+                
+                // If no debit/credit found, try amount column
+                if (debit === 0 && credit === 0 && amountKeys.length > 0) {
+                  const amount = this.parseAmountEnhanced(row[headerMap[amountKeys[0]]]);
+                  if (amount.type === 'debit') debit = amount.value;
+                  if (amount.type === 'credit') credit = amount.value;
+                }
+                
+                // Create transaction if valid
+                if (date && (debit > 0 || credit > 0)) {
+                  allTransactions.push({
+                    date,
+                    dateString: row[headerMap[Object.keys(headerMap).find(k => k.includes('date')) || 0]] || '',
+                    description: description || 'Transaction',
+                    debit,
+                    credit,
+                    category: this.categorizeTransaction(description),
+                    type: credit > 0 ? 'CREDIT' : 'DEBIT',
+                    bank: bankName
+                  });
+                }
+              }
+              
             } catch (sheetError) {
               console.error(`Error processing sheet ${sheetName}:`, sheetError);
             }
@@ -770,8 +769,9 @@ class UniversalBankParser {
         } catch (error) {
           reject(error);
         }
-      }.bind(this);
+      };
       
+      reader.onerror = reject;
       reader.readAsArrayBuffer(file);
     });
   }
@@ -786,82 +786,85 @@ class UniversalBankParser {
             const transactions = [];
             let bankName = 'Unknown';
             
+            // Detect bank from data
             results.data.forEach(row => {
-              const lowerRow = {};
-              Object.keys(row).forEach(key => {
-                lowerRow[key.toLowerCase()] = row[key];
-              });
-              
-              Object.values(lowerRow).forEach(value => {
+              Object.values(row).forEach(value => {
                 if (typeof value === 'string') {
-                  BANK_PATTERNS.forEach(bank => {
-                    if (bank.keywords.some(keyword => value.toLowerCase().includes(keyword))) {
+                  const valueLower = value.toLowerCase();
+                  for (const bank of BANK_PATTERNS) {
+                    if (bank.keywords.some(keyword => valueLower.includes(keyword))) {
                       bankName = bank.name;
                     }
-                  });
+                  }
                 }
               });
-              
+            });
+            
+            // Normalize headers
+            const normalizedData = results.data.map(row => {
+              const normalized = {};
+              Object.keys(row).forEach(key => {
+                const normalizedKey = key.toLowerCase().trim();
+                normalized[normalizedKey] = row[key];
+              });
+              return normalized;
+            });
+            
+            // Process each row
+            normalizedData.forEach(row => {
               let date = null;
-              const dateKeys = Object.keys(lowerRow).filter(key => 
-                key.includes('date') || key.includes('transaction date')
-              );
-              
-              for (const key of dateKeys) {
-                date = this.parseDate(lowerRow[key]);
-                if (date) break;
-              }
-              
               let description = '';
-              const descKeys = Object.keys(lowerRow).filter(key => 
-                key.includes('desc') || key.includes('narration') || 
-                key.includes('particular') || key.includes('remark')
-              );
+              let debit = 0;
+              let credit = 0;
               
-              for (const key of descKeys) {
-                if (lowerRow[key]) {
-                  description = lowerRow[key].toString().trim();
+              // Find date
+              for (const key in row) {
+                if (key.includes('date') && row[key]) {
+                  date = this.parseDate(row[key]);
                   break;
                 }
               }
               
-              let credit = 0, debit = 0;
-              
-              const creditKeys = Object.keys(lowerRow).filter(key => 
-                key.includes('credit') || key.includes('cr') || key.includes('deposit')
-              );
-              
-              const debitKeys = Object.keys(lowerRow).filter(key => 
-                key.includes('debit') || key.includes('dr') || key.includes('withdrawal')
-              );
-              
-              for (const key of creditKeys) {
-                credit += this.parseAmount(lowerRow[key]).credit;
-              }
-              
-              for (const key of debitKeys) {
-                debit += this.parseAmount(lowerRow[key]).debit;
-              }
-              
-              if (credit === 0 && debit === 0) {
-                const amountKeys = Object.keys(lowerRow).filter(key => 
-                  key.includes('amount')
-                );
-                
-                for (const key of amountKeys) {
-                  const amount = this.parseAmount(lowerRow[key]);
-                  credit += amount.credit;
-                  debit += amount.debit;
+              // Find description
+              for (const key in row) {
+                if ((key.includes('desc') || key.includes('narration') || key.includes('particular')) && 
+                    row[key] && !this.isDateLike(row[key]) && !this.isAmountLike(row[key])) {
+                  description = row[key].toString().trim();
+                  break;
                 }
               }
               
-              if (date && (credit > 0 || debit > 0)) {
+              // Find amounts
+              for (const key in row) {
+                if (key.includes('debit') || key.includes('dr') || key.includes('withdrawal')) {
+                  const amount = this.parseAmountEnhanced(row[key]);
+                  if (amount.type === 'debit') debit = amount.value;
+                }
+                if (key.includes('credit') || key.includes('cr') || key.includes('deposit')) {
+                  const amount = this.parseAmountEnhanced(row[key]);
+                  if (amount.type === 'credit') credit = amount.value;
+                }
+              }
+              
+              // Fallback to amount column
+              if (debit === 0 && credit === 0) {
+                for (const key in row) {
+                  if (key.includes('amount') && !key.includes('balance')) {
+                    const amount = this.parseAmountEnhanced(row[key]);
+                    if (amount.type === 'debit') debit = amount.value;
+                    if (amount.type === 'credit') credit = amount.value;
+                    break;
+                  }
+                }
+              }
+              
+              if (date && (debit > 0 || credit > 0)) {
                 transactions.push({
                   date,
-                  dateString: lowerRow[dateKeys[0]] || '',
+                  dateString: row['date'] || '',
                   description: description || 'Transaction',
-                  credit,
                   debit,
+                  credit,
                   category: this.categorizeTransaction(description),
                   type: credit > 0 ? 'CREDIT' : 'DEBIT',
                   bank: bankName
@@ -893,64 +896,77 @@ class UniversalBankParser {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       
-      reader.onload = function(e) {
+      reader.onload = (e) => {
         try {
           const data = JSON.parse(e.target.result);
           const transactions = [];
           let bankName = 'Unknown';
           
-          const extractTransactions = (objArray) => {
-            if (!Array.isArray(objArray)) return;
+          const extractFromArray = (arr) => {
+            if (!Array.isArray(arr)) return;
             
-            objArray.forEach(item => {
+            arr.forEach(item => {
               if (item && typeof item === 'object') {
-                const lowerItem = {};
+                // Convert keys to lowercase for consistency
+                const normalized = {};
                 Object.keys(item).forEach(key => {
-                  lowerItem[key.toLowerCase()] = item[key];
+                  normalized[key.toLowerCase().trim()] = item[key];
                 });
                 
-                Object.values(lowerItem).forEach(value => {
+                // Detect bank
+                Object.values(normalized).forEach(value => {
                   if (typeof value === 'string') {
-                    BANK_PATTERNS.forEach(bank => {
-                      if (bank.keywords.some(keyword => value.toLowerCase().includes(keyword))) {
+                    const valueLower = value.toLowerCase();
+                    for (const bank of BANK_PATTERNS) {
+                      if (bank.keywords.some(keyword => valueLower.includes(keyword))) {
                         bankName = bank.name;
                       }
-                    });
+                    }
                   }
                 });
                 
-                const date = this.parseDate(
-                  lowerItem.date || lowerItem.transactiondate || 
-                  lowerItem.transaction_date || lowerItem.value_date
-                );
+                // Extract data
+                let date = null;
+                let description = '';
+                let debit = 0;
+                let credit = 0;
                 
-                const description = 
-                  lowerItem.description || lowerItem.narration || 
-                  lowerItem.particulars || lowerItem.remarks || '';
-                
-                let credit = 0, debit = 0;
-                
-                if (lowerItem.credit || lowerItem.cr) {
-                  credit = this.parseAmount(lowerItem.credit || lowerItem.cr).credit;
+                // Find date
+                for (const key in normalized) {
+                  if (key.includes('date') && normalized[key]) {
+                    date = this.parseDate(normalized[key]);
+                    break;
+                  }
                 }
                 
-                if (lowerItem.debit || lowerItem.dr) {
-                  debit = this.parseAmount(lowerItem.debit || lowerItem.dr).debit;
+                // Find description
+                for (const key in normalized) {
+                  if ((key.includes('desc') || key.includes('narration') || key.includes('particular')) && 
+                      normalized[key] && !this.isDateLike(normalized[key]) && !this.isAmountLike(normalized[key])) {
+                    description = normalized[key].toString().trim();
+                    break;
+                  }
                 }
                 
-                if (lowerItem.amount && credit === 0 && debit === 0) {
-                  const amount = this.parseAmount(lowerItem.amount);
-                  credit = amount.credit;
-                  debit = amount.debit;
+                // Find amounts
+                for (const key in normalized) {
+                  if (key.includes('debit') || key.includes('dr')) {
+                    const amount = this.parseAmountEnhanced(normalized[key]);
+                    if (amount.type === 'debit') debit = amount.value;
+                  }
+                  if (key.includes('credit') || key.includes('cr')) {
+                    const amount = this.parseAmountEnhanced(normalized[key]);
+                    if (amount.type === 'credit') credit = amount.value;
+                  }
                 }
                 
-                if (date && (credit > 0 || debit > 0)) {
+                if (date && (debit > 0 || credit > 0)) {
                   transactions.push({
                     date,
-                    dateString: lowerItem.date || '',
-                    description: description.toString(),
-                    credit,
+                    dateString: normalized['date'] || '',
+                    description: description || 'Transaction',
                     debit,
+                    credit,
                     category: this.categorizeTransaction(description),
                     type: credit > 0 ? 'CREDIT' : 'DEBIT',
                     bank: bankName
@@ -960,16 +976,18 @@ class UniversalBankParser {
             });
           };
           
+          // Handle different JSON structures
           if (Array.isArray(data)) {
-            extractTransactions(data);
+            extractFromArray(data);
           } else if (data.transactions && Array.isArray(data.transactions)) {
-            extractTransactions(data.transactions);
+            extractFromArray(data.transactions);
           } else if (data.data && Array.isArray(data.data)) {
-            extractTransactions(data.data);
+            extractFromArray(data.data);
           } else {
+            // Try to find arrays in the object
             Object.values(data).forEach(value => {
               if (Array.isArray(value)) {
-                extractTransactions(value);
+                extractFromArray(value);
               }
             });
           }
@@ -988,8 +1006,9 @@ class UniversalBankParser {
         } catch (error) {
           reject(error);
         }
-      }.bind(this);
+      };
       
+      reader.onerror = reject;
       reader.readAsText(file);
     });
   }
@@ -1010,7 +1029,8 @@ class UniversalBankParser {
         throw new Error(`Unsupported file format: ${fileName}`);
       }
     } catch (error) {
-      throw error;
+      console.error(`Error processing ${file.name}:`, error);
+      throw new Error(`Failed to process ${file.name}: ${error.message}`);
     }
   }
 
@@ -1033,10 +1053,23 @@ class UniversalBankParser {
           metadata.bankName = result.metadata.bankName;
         }
         
+        // Merge account info if available
+        if (!metadata.accountNumber && result.metadata.accountNumber) {
+          metadata.accountNumber = result.metadata.accountNumber;
+        }
+        
+        if (!metadata.period && result.metadata.period) {
+          metadata.period = result.metadata.period;
+        }
+        
       } catch (error) {
-        throw new Error(`Failed to process ${file.name}: ${error.message}`);
+        console.error(`Failed to process ${file.name}:`, error);
+        throw error;
       }
     }
+    
+    // Sort by date
+    allTransactions.sort((a, b) => a.date - b.date);
     
     metadata.totalTransactions = allTransactions.length;
     
@@ -1046,6 +1079,194 @@ class UniversalBankParser {
     };
   }
 }
+
+// ==================== FINANCIAL STATEMENT GENERATORS ====================
+
+export const generateIncomeStatement = (data) => {
+  const incomeRows = data.filter(r => 
+    r.credit > 0 && 
+    !r.type.includes('TRANSFER') && 
+    !r.category.includes('Transfer')
+  );
+  
+  const expenseRows = data.filter(r => 
+    r.debit > 0 && 
+    !r.type.includes('TRANSFER') && 
+    !r.category.includes('Transfer')
+  );
+  
+  const totalIncome = incomeRows.reduce((sum, r) => sum + r.credit, 0);
+  const totalExpenses = expenseRows.reduce((sum, r) => sum + r.debit, 0);
+  const netIncome = totalIncome - totalExpenses;
+  
+  return { 
+    totalIncome, 
+    totalExpenses, 
+    netIncome,
+    incomeCount: incomeRows.length,
+    expenseCount: expenseRows.length,
+    incomeByCategory: groupByCategory(incomeRows, 'credit'),
+    expensesByCategory: groupByCategory(expenseRows, 'debit')
+  };
+};
+
+export const generateCashFlowStatement = (data) => {
+  // Operating Activities
+  const operatingIncome = data
+    .filter(r => r.credit > 0 && 
+               !r.category.includes('Investment') && 
+               !r.category.includes('Loan') &&
+               !r.category.includes('Transfer') &&
+               !r.category.includes('Refund'))
+    .reduce((sum, r) => sum + r.credit, 0);
+  
+  const operatingExpenses = data
+    .filter(r => r.debit > 0 && 
+               !r.category.includes('Investment') && 
+               !r.category.includes('Loan') &&
+               !r.category.includes('Transfer'))
+    .reduce((sum, r) => sum + r.debit, 0);
+  
+  // Investing Activities
+  const investingCashFlow = data
+    .filter(r => r.category.includes('Investment') || 
+                r.description.toLowerCase().includes('mutual fund') ||
+                r.description.toLowerCase().includes('stock') ||
+                r.description.toLowerCase().includes('fixed deposit'))
+    .reduce((sum, r) => sum + (r.credit - r.debit), 0);
+  
+  // Financing Activities
+  const financingCashFlow = data
+    .filter(r => r.category.includes('Loan') || 
+                r.description.toLowerCase().includes('loan') ||
+                r.description.toLowerCase().includes('emi') ||
+                r.description.toLowerCase().includes('repayment'))
+    .reduce((sum, r) => sum + (r.credit - r.debit), 0);
+  
+  const netCashFlow = operatingIncome - operatingExpenses + investingCashFlow + financingCashFlow;
+  
+  // Detect recurring payments
+  const recurringPayments = detectRecurringPayments(data);
+  
+  return {
+    operatingCashFlow: operatingIncome - operatingExpenses,
+    investingCashFlow,
+    financingCashFlow,
+    netCashFlow,
+    recurringPayments,
+    cashFlowByMonth: groupCashFlowByMonth(data)
+  };
+};
+
+export const generateBalanceSheet = (data, netIncome) => {
+  const cashBalance = data.reduce((sum, r) => sum + r.credit - r.debit, 0);
+  
+  const investments = data
+    .filter(r => r.category.includes('Investment') && r.debit > 0)
+    .reduce((sum, r) => sum + r.debit, 0);
+  
+  const accountsReceivable = data
+    .filter(r => r.credit > 0 && r.category.includes('Business Income'))
+    .reduce((sum, r) => sum + r.credit, 0) * 0.3; // Estimate 30% as receivable
+  
+  const totalAssets = Math.max(0, cashBalance) + investments + accountsReceivable;
+  
+  const loans = data
+    .filter(r => r.category.includes('Loan') && r.credit > 0)
+    .reduce((sum, r) => sum + r.credit, 0);
+  
+  const totalLiabilities = loans;
+  const totalEquity = Math.max(0, netIncome);
+  
+  return { 
+    totalAssets, 
+    totalLiabilities, 
+    totalEquity,
+    cashBalance: Math.max(0, cashBalance),
+    investments,
+    accountsReceivable
+  };
+};
+
+// Helper functions
+const groupByCategory = (data, amountField) => {
+  const groups = {};
+  data.forEach(item => {
+    const category = item.category || 'Uncategorized';
+    if (!groups[category]) groups[category] = 0;
+    groups[category] += item[amountField];
+  });
+  return groups;
+};
+
+const groupCashFlowByMonth = (data) => {
+  const byMonth = {};
+  data.forEach(item => {
+    if (!item.date) return;
+    const monthKey = `${item.date.getFullYear()}-${String(item.date.getMonth() + 1).padStart(2, '0')}`;
+    if (!byMonth[monthKey]) {
+      byMonth[monthKey] = { income: 0, expenses: 0, net: 0 };
+    }
+    byMonth[monthKey].income += item.credit;
+    byMonth[monthKey].expenses += item.debit;
+    byMonth[monthKey].net = byMonth[monthKey].income - byMonth[monthKey].expenses;
+  });
+  return byMonth;
+};
+
+const detectRecurringPayments = (data) => {
+  const monthlyGroups = {};
+  
+  // Group by description pattern and amount
+  data.forEach(item => {
+    if (item.debit > 0) {
+      const key = item.description.toLowerCase()
+        .replace(/\d+/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .substring(0, 40);
+      
+      const amountKey = Math.round(item.debit / 100) * 100; // Group similar amounts
+      const fullKey = `${key}_${amountKey}`;
+      
+      if (!monthlyGroups[fullKey]) {
+        monthlyGroups[fullKey] = [];
+      }
+      monthlyGroups[fullKey].push(item);
+    }
+  });
+  
+  // Find recurring patterns
+  const recurring = [];
+  Object.entries(monthlyGroups).forEach(([key, items]) => {
+    if (items.length >= 2) {
+      items.sort((a, b) => a.date - b.date);
+      
+      // Check if intervals are monthly
+      let isMonthly = true;
+      for (let i = 1; i < items.length; i++) {
+        const daysDiff = (items[i].date - items[i-1].date) / (1000 * 60 * 60 * 24);
+        if (daysDiff < 25 || daysDiff > 35) {
+          isMonthly = false;
+          break;
+        }
+      }
+      
+      if (isMonthly) {
+        recurring.push({
+          description: items[0].description,
+          averageAmount: items.reduce((sum, item) => sum + item.debit, 0) / items.length,
+          frequency: 'monthly',
+          count: items.length,
+          nextExpected: new Date(items[items.length - 1].date.getTime() + 30 * 24 * 60 * 60 * 1000),
+          category: items[0].category
+        });
+      }
+    }
+  });
+  
+  return recurring;
+};
 
 // ==================== PAYMENT WALL COMPONENT ====================
 
@@ -1188,10 +1409,9 @@ function FinancialDashboard() {
   const [showPaymentWall, setShowPaymentWall] = useState(false);
   const [hasPaid, setHasPaid] = useState(false);
   const [processingResult, setProcessingResult] = useState(null);
+  const [financialMetrics, setFinancialMetrics] = useState(null);
   const fileInputRef = useRef(null);
   
-  const parser = new UniversalBankParser();
-
   // Sample data for demo
   const sampleData = [
     {"DATE":"01-04-2025","MONTH":"April","PARTICULARS":"Salary","DEBIT":0,"CREDIT":50000,"TYPE":"INCOME","BANK A/C":"AXIS BANK"},
@@ -1295,6 +1515,7 @@ function FinancialDashboard() {
     setLoading(true);
     setError(null);
     setProcessingStats(null);
+    setFinancialMetrics(null);
     
     try {
       // Check if payment is needed
@@ -1308,6 +1529,7 @@ function FinancialDashboard() {
         return;
       }
       
+      const parser = new EnhancedUniversalBankParser();
       const result = await parser.processFiles(files);
       
       // Apply transaction limit for free tier
@@ -1318,23 +1540,19 @@ function FinancialDashboard() {
       }
       
       setProcessingResult(result);
-      
-      // Convert to normalized format
-      const normalizedData = result.transactions.map(t => ({
-        DATE: t.date.toISOString().split('T')[0],
-        MONTH: t.date.toLocaleString('default', { month: 'long' }),
-        PARTICULARS: t.description,
-        DEBIT: t.debit,
-        CREDIT: t.credit,
-        TYPE: t.type,
-        CATEGORY: t.category,
-        'BANK A/C': t.bank,
-        'BANK DETECTED': result.metadata.bankName
-      }));
-      
-      const finalData = normalizeData(normalizedData);
-      setTransactions(finalData);
+      setTransactions(result.transactions);
       setDetectedBank(result.metadata.bankName);
+      
+      // Generate financial metrics
+      const incomeStatement = generateIncomeStatement(result.transactions);
+      const cashFlow = generateCashFlowStatement(result.transactions);
+      const balanceSheet = generateBalanceSheet(result.transactions, incomeStatement.netIncome);
+      
+      setFinancialMetrics({
+        incomeStatement,
+        cashFlow,
+        balanceSheet
+      });
       
       // Calculate processing stats
       const stats = {
@@ -1344,7 +1562,9 @@ function FinancialDashboard() {
         bankDetected: result.metadata.bankName,
         fileCount: files.length,
         hasPDF: files.some(isPDF),
-        fileType: result.metadata.fileType
+        fileType: result.metadata.fileType,
+        accountNumber: result.metadata.accountNumber,
+        period: result.metadata.period
       };
       
       setProcessingStats(stats);
@@ -1369,18 +1589,44 @@ function FinancialDashboard() {
 
   // Load sample data on initial render
   useEffect(() => {
-    if (files.length === 0) {
+    if (files.length === 0 && !loading) {
       const loadSampleData = async () => {
         setLoading(true);
         try {
-          const normalizedData = normalizeData(sampleData);
-          setTransactions(normalizedData);
-          setDetectedBank('AXIS BANK');
+          // Convert sample data to transaction format
+          const sampleTransactions = sampleData.map(item => ({
+            date: parseDateFlexible(item.DATE),
+            dateString: item.DATE,
+            description: item.PARTICULARS,
+            debit: item.DEBIT,
+            credit: item.CREDIT,
+            category: categorizeTransaction(item.PARTICULARS, item.TYPE, item.CREDIT, item.DEBIT),
+            type: item.CREDIT > 0 ? 'CREDIT' : 'DEBIT',
+            bank: item['BANK A/C']
+          })).filter(t => t.date);
+          
+          setTransactions(sampleTransactions);
+          setDetectedBank('AXIS BANK (Sample Data)');
+          
+          // Generate financial metrics
+          const incomeStatement = generateIncomeStatement(sampleTransactions);
+          const cashFlow = generateCashFlowStatement(sampleTransactions);
+          const balanceSheet = generateBalanceSheet(sampleTransactions, incomeStatement.netIncome);
+          
+          setFinancialMetrics({
+            incomeStatement,
+            cashFlow,
+            balanceSheet
+          });
+          
           setProcessingStats({
-            totalRows: normalizedData.length,
-            successfulRows: normalizedData.length,
+            totalRows: sampleTransactions.length,
+            successfulRows: sampleTransactions.length,
             failedRows: 0,
-            bankDetected: 'AXIS BANK (Sample Data)'
+            bankDetected: 'AXIS BANK (Sample Data)',
+            fileCount: 0,
+            hasPDF: false,
+            fileType: 'Sample'
           });
         } catch (err) {
           console.error('Error loading sample data:', err);
@@ -1392,16 +1638,23 @@ function FinancialDashboard() {
     }
   }, [files.length]);
 
-  // Calculate financial metrics
-  const financialMetrics = useMemo(() => {
-    if (transactions.length === 0) return null;
+  // Categorize transaction helper
+  const categorizeTransaction = (particulars, type, credit, debit) => {
+    const particularsLower = particulars.toLowerCase();
     
-    const incomeStatement = generateIncomeStatement(transactions);
-    const cashFlow = generateCashFlowStatement(transactions);
-    const balanceSheet = generateBalanceSheet(transactions, incomeStatement.netIncome);
+    for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+      for (const keyword of keywords) {
+        if (particularsLower.includes(keyword.toLowerCase())) {
+          return category;
+        }
+      }
+    }
     
-    return { incomeStatement, cashFlow, balanceSheet };
-  }, [transactions]);
+    if (type === 'INCOME' || credit > 0) return 'Other Income';
+    if (type === 'EXPENSE' || debit > 0) return 'Other Expenses';
+    
+    return 'Uncategorized';
+  };
 
   // Prepare chart data
   const chartData = useMemo(() => {
@@ -1410,7 +1663,8 @@ function FinancialDashboard() {
     // Group transactions by month
     const byMonth = new Map();
     transactions.forEach(t => {
-      const month = t._ym || 'Unknown';
+      if (!t.date) return;
+      const month = `${t.date.getFullYear()}-${String(t.date.getMonth() + 1).padStart(2, '0')}`;
       if (!byMonth.has(month)) byMonth.set(month, []);
       byMonth.get(month).push(t);
     });
@@ -1476,7 +1730,17 @@ function FinancialDashboard() {
       return;
     }
     
-    const dataStr = JSON.stringify(transactions, null, 2);
+    const exportData = transactions.map(t => ({
+      date: t.date.toISOString().split('T')[0],
+      description: t.description,
+      debit: t.debit,
+      credit: t.credit,
+      category: t.category,
+      type: t.type,
+      bank: t.bank
+    }));
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1496,19 +1760,17 @@ function FinancialDashboard() {
       return;
     }
     
-    const headers = ['Date', 'Month', 'Particulars', 'Debit', 'Credit', 'Type', 'Category', 'Bank', 'ProcessedDate'];
+    const headers = ['Date', 'Description', 'Debit', 'Credit', 'Type', 'Category', 'Bank'];
     const csvRows = [
       headers.join(','),
       ...transactions.map(t => [
-        t.date,
-        t.month,
-        `"${t.particulars.replace(/"/g, '""')}"`,
+        t.date.toISOString().split('T')[0],
+        `"${t.description.replace(/"/g, '""')}"`,
         t.debit,
         t.credit,
         t.type,
         t.category,
-        t.bank,
-        new Date().toISOString().split('T')[0]
+        t.bank
       ].join(','))
     ];
     
@@ -1585,8 +1847,8 @@ function FinancialDashboard() {
             <tbody>
               ${transactions.slice(0, 50).map(t => `
                 <tr>
-                  <td>${t._dt ? t._dt.toLocaleDateString() : t.date}</td>
-                  <td>${t.particulars}</td>
+                  <td>${t.date ? t.date.toLocaleDateString() : 'N/A'}</td>
+                  <td>${t.description}</td>
                   <td class="credit">${t.credit > 0 ? '₹' + t.credit : ''}</td>
                   <td class="debit">${t.debit > 0 ? '₹' + t.debit : ''}</td>
                   <td>${t.category}</td>
@@ -1661,7 +1923,17 @@ function FinancialDashboard() {
       {stats.hasPDF && (
         <div className="mt-4 flex items-center gap-2 text-sm text-amber-600">
           <AlertCircle size={16} />
-          <span>PDF processing may have limited accuracy</span>
+          <span>PDF processed with watermark filtering</span>
+        </div>
+      )}
+      {stats.accountNumber && (
+        <div className="mt-2 text-sm text-gray-600">
+          <span className="font-medium">Account:</span> {stats.accountNumber}
+        </div>
+      )}
+      {stats.period && (
+        <div className="mt-1 text-sm text-gray-600">
+          <span className="font-medium">Period:</span> {stats.period}
         </div>
       )}
     </div>
@@ -1769,6 +2041,25 @@ function FinancialDashboard() {
           </tbody>
         </table>
       </div>
+      {cashFlow.recurringPayments && cashFlow.recurringPayments.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold text-[#694F8E] mb-3">Recurring Payments</h3>
+          <div className="space-y-2">
+            {cashFlow.recurringPayments.map((payment, idx) => (
+              <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="font-medium text-gray-800">{payment.description}</p>
+                  <p className="text-sm text-gray-600">{payment.category} • {payment.frequency}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-red-600">{toINR(payment.averageAmount)}</p>
+                  <p className="text-xs text-gray-500">{payment.count} payments</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -2110,7 +2401,7 @@ function FinancialDashboard() {
                           </span>
                           {isPdfFile && (
                             <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-800 text-xs rounded-full">
-                              PDF
+                              PDF (Watermark Filtered)
                             </span>
                           )}
                         </div>
@@ -2358,10 +2649,10 @@ function FinancialDashboard() {
                         <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                           <div className="flex-1 min-w-0">
                             <div className="text-sm text-gray-500">
-                              {t._dt ? t._dt.toLocaleDateString() : t.date}
+                              {t.date ? t.date.toLocaleDateString() : 'N/A'}
                             </div>
                             <div className="font-medium text-gray-800 truncate">
-                              {t.particulars}
+                              {t.description}
                             </div>
                             <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
                               <span className="px-2 py-0.5 bg-gray-100 rounded">{t.category}</span>
@@ -2422,11 +2713,11 @@ function FinancialDashboard() {
                         {transactions.map((t, i) => (
                           <tr key={i} className="hover:bg-gray-50">
                             <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">
-                              {t._dt ? t._dt.toLocaleDateString() : t.date}
+                              {t.date ? t.date.toLocaleDateString() : 'N/A'}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-900 max-w-xs">
-                              <div className="truncate" title={t.particulars}>
-                                {t.particulars}
+                              <div className="truncate" title={t.description}>
+                                {t.description}
                               </div>
                             </td>
                             <td className="px-4 py-3 text-sm text-green-600 font-medium">
@@ -2480,6 +2771,7 @@ function FinancialDashboard() {
                 onClick={() => {
                   setFiles([]);
                   setTransactions([]);
+                  setFinancialMetrics(null);
                   setProcessingStats(null);
                   setActiveTab('overview');
                 }}

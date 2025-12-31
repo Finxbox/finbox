@@ -370,6 +370,7 @@ async function readFile(file) {
         } else if (fileName.endsWith('.csv')) {
           const results = Papa.parse(content, {
             header: true,
+            skipEmptyLines: true,
             transformHeader: (header) => header.trim(),
             skipEmptyLines: 'greedy'
           });

@@ -3,6 +3,20 @@ import { useState, useEffect } from "react";
 import { useUser, useClerk } from "@clerk/clerk-react";
 import { supabase } from "../lib/supabase";
 import { Download, Filter, Search, TrendingUp, TrendingDown, Calendar, BarChart3, FileSpreadsheet, Trash2, Eye, RefreshCw } from "lucide-react";
+import Seo from "../components/Seo";
+
+// ===================== seo =====================
+<section className="max-w-6xl mx-auto px-6 py-16 text-gray-700">
+  <h2 className="text-2xl font-semibold mb-4">
+    Maintain a Disciplined Trading Journal
+  </h2>
+  <p>
+    A trading journal helps traders review decisions, track emotions, and
+    improve execution over time. Finxbox provides a structured journaling
+    system designed to support long-term performance improvement.
+  </p>
+</section>
+
 
 const PremiumJournal = () => {
   const { user, isLoaded } = useUser();

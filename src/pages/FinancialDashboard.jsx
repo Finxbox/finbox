@@ -19,6 +19,55 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DematCTA from "../components/utility/DematCTA.jsx";
+import Seo from "../components/Seo.jsx";
+
+{/* ================= SEO CONTENT – FINANCIAL DASHBOARD ================= */}
+
+<section className="max-w-6xl mx-auto px-6 py-20 text-gray-700">
+
+  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+    Generate Clear Financial Statements
+  </h2>
+
+  <p className="mb-6 max-w-4xl">
+    The Finxbox Financial Dashboard is designed to help users generate and
+    understand financial statements in a structured and simplified way.
+    By organizing financial data into clear formats, users can gain
+    better visibility into income, expenses, and overall financial
+    performance.
+  </p>
+
+  <p className="mb-6 max-w-4xl">
+    This tool is useful for individuals, traders, and small businesses
+    who want clarity in financial tracking without complex accounting
+    software. The dashboard focuses on logical calculations and clean
+    presentation of financial information.
+  </p>
+
+  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+    Why Use a Financial Dashboard?
+  </h2>
+
+  <p className="mb-6 max-w-4xl">
+    Financial dashboards help users make informed decisions by converting
+    raw numbers into meaningful insights. Tracking financial statements
+    regularly enables better planning, improved budgeting, and a deeper
+    understanding of financial health.
+  </p>
+
+  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+    Simple, Structured, and Insightful
+  </h2>
+
+  <p className="max-w-4xl">
+    Finxbox focuses on simplicity and usability. The Financial Dashboard
+    does not require accounting expertise and is built to provide clear
+    outputs based on user inputs, making financial analysis more
+    accessible and practical.
+  </p>
+
+</section>
+
 
 // ==================== CONFIGURATION ====================
 

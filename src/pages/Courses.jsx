@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { GraduationCap, Clock, BookOpen } from "lucide-react";
 import { courses } from "../Data/courses";
-
+import Seo from "../components/Seo";
 const Courses = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
@@ -70,3 +70,15 @@ const Courses = () => {
 };
 
 export default Courses;
+
+<section className="max-w-5xl mx-auto px-6 py-16 text-gray-700">
+  <h2 className="text-2xl font-semibold mb-4">
+    About This Stock Market Course
+  </h2>
+  <p>
+    This course is designed to help learners understand real-world stock
+    market concepts through structured lessons, live sessions, and
+    practical examples. It focuses on clarity, risk awareness, and
+    disciplined decision-making.
+  </p>
+</section>

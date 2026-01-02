@@ -28,17 +28,12 @@
   </url>
 
   <url>
-    <loc>https://finxbox.in/courses</loc>
+    <loc>https://finxbox.com/courses</loc>
     <priority>0.8</priority>
   </url>
 
    <url>
     <loc>https://finxbox.com/store</loc>
-    <priority>0.7</priority>
-  </url>
-
-   <url>
-    <loc>https://finxbox.blogspot.com/</loc>
     <priority>0.7</priority>
   </url>
 

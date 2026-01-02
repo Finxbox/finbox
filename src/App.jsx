@@ -5,7 +5,6 @@ import Home from "./pages/Home";
 import PortfolioCalculator from "./pages/PortfolioCalculator";
 import PositionSizeCalculator from "./pages/PositionSizeCalculator";
 import Loading from "./components/Loader/Loading";
-import { Helmet } from "react-helmet-async";
 
 import ToolsLayout from "./Layouts/ToolsLayout";
 import StoreLayout from "./Layouts/StoreLayout";
@@ -21,6 +20,7 @@ import CookiePolicy from "./pages/CookiePolicy";
 import PremiumJournal from "./pages/PremiumJournal";
 import ContactUs from "./pages/ContactUs";
 
+import Analytics from "./components/Analytics";
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -33,46 +33,44 @@ const App = () => {
   if (isLoading) return <Loading />;
 
   return (
-    <Routes>
+    <>
+      {/* ✅ GOOGLE ANALYTICS FOR SPA */}
+      <Analytics />
 
-      {/* TOOLS LAYOUT */}
-      <Route element={<ToolsLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route
-          path="/financial-statement-generator"
-          element={<FinancialDashboard />}
-        />
-        <Route
-          path="/portfolio-calculator"
-          element={<PortfolioCalculator />}
-        />
-        <Route
-          path="/position-size-calculator"
-          element={<PositionSizeCalculator />}
-        />
-      </Route>
+      <Routes>
+        {/* TOOLS LAYOUT */}
+        <Route element={<ToolsLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route
+            path="/financial-statement-generator"
+            element={<FinancialDashboard />}
+          />
+          <Route
+            path="/portfolio-calculator"
+            element={<PortfolioCalculator />}
+          />
+          <Route
+            path="/position-size-calculator"
+            element={<PositionSizeCalculator />}
+          />
+        </Route>
 
-      <Route
-          path="/trading-journal"
-          element={<PremiumJournal />}
-        />
+        <Route path="/trading-journal" element={<PremiumJournal />} />
 
-      {/* STORE / COURSES LAYOUT */}
-      <Route element={<StoreLayout />}>
-        <Route path="/store" element={<Store />} />
-        <Route path="/course" element={<Courses />} />
-        <Route path="/course/:courseId" element={<CoursePage />} />
-      </Route>
+        {/* STORE / COURSES */}
+        <Route element={<StoreLayout />}>
+          <Route path="/store" element={<Store />} />
+          <Route path="/course" element={<Courses />} />
+          <Route path="/course/:courseId" element={<CoursePage />} />
+        </Route>
 
-      {/* LEGAL */}
-      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-      <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-      <Route path="/cookie-policy" element={<CookiePolicy />} />
-            <Route path="/contact-us" element={<ContactUs />} />
-
-
-
-    </Routes>
+        {/* LEGAL */}
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+        <Route path="/cookie-policy" element={<CookiePolicy />} />
+        <Route path="/contact-us" element={<ContactUs />} />
+      </Routes>
+    </>
   );
 };
 

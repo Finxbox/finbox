@@ -178,6 +178,13 @@ const StoreComp = () => {
               target="_blank"
               rel="noopener noreferrer"
               className="text-center flex flex-col justify-between h-full"
+              onClick={() => {
+    window.gtag?.("event", "buy_on_amazon_click", {
+      event_category: "affiliate",
+      event_label: item.ItemInfo.Title.DisplayValue,
+      page_path: window.location.pathname,
+    });
+  }}
             >
               <img
                 src={item.Images.Primary.Medium.URL}

@@ -185,21 +185,11 @@ const Navbar = () => {
                   <UserButton />
                 ) : (
                   <button
-  onClick={() => {
-    // 🔹 GA4 LOGIN CLICK EVENT
-    window.gtag?.("event", "login_click", {
-      page_path: window.location.pathname,
-      source: "navbar",
-    });
-
-    // 🔹 OPEN CLERK SIGN-IN
-    openSignIn();
-  }}
-  className="px-6 py-2 rounded-xl bg-[#694F8E] text-white font-medium shadow hover:scale-[1.03] hover:bg-[#563C70] transition"
->
-  Login
-</button>
-
+                    onClick={() => openSignIn()}
+                    className="px-6 py-2 rounded-xl bg-[#694F8E] text-white font-medium shadow hover:scale-[1.03] hover:bg-[#563C70] transition"
+                  >
+                    Login
+                  </button>
                 )}
               </li>
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 
 import { HelmetProvider } from 'react-helmet-async';
 
@@ -39,6 +40,9 @@ const App = () => {
     <>
       {/* ✅ GOOGLE ANALYTICS FOR SPA */}
       <Analytics />
+      
+      {/* ✅ VERCEL WEB ANALYTICS */}
+      <VercelAnalytics />
 
       <Routes>
         {/* TOOLS LAYOUT */}

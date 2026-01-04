@@ -1,0 +1,37 @@
+[33mba42498[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Fix sitemap
+[33m2b86d0a[m add vercel analyatics
+[33mb133b8a[m seo still yet to finsh but add catagory file
+[33mb020a99[m login button seo
+[33m02ddb12[m add google analytic track in login and books buttons
+[33m297fcdc[m google analtics added
+[33m857a02c[m Add SEO meta, H1, and content for pages
+[33ma33759b[m Fix vercel.json (remove redirect loop)
+[33m5680df6[m Add www to non-www 301 redirect
+[33m331727b[m Clean sitemap to only include finxbox.com URLs
+[33m0488ca0[m Financial statement excel is now working
+[33m4252d68[m finally fixed but still seo is not install fully
+[33m6a8f8b8[m Fix build page issue
+[33m69a3f53[m Fix build issues and enable production build
+[33m3c764b1[m Fix Vercel routing: serve sitemap and robots before SPA rewrite
+[33m6539255[m Add automatic canonical URLs for all pages
+[33m57b75cd[m Fix sitemap and robots domain to finxbox.com
+[33m55f7b6e[m Allow sitemap.xml and robots.txt to bypass SPA rewrite
+[33mf1b5f86[m Merge branch 'backup-my-work' ESC :wq ENTER ESC :wq ENTER Merge branch 'backup-my-work'
+[33m10ed092[m[33m ([m[1;31morigin/backup-my-work[m[33m, [m[1;32mbackup-my-work[m[33m)[m Add sitemap and robots.txt for SEO
+[33m4b4aba7[m DB error cleared contact us page added
+[33mf0a4da4[m Backup of all my current work
+[33m7b8afde[m razorpay test mode activated with payment verification and database is_premium tag changing
+[33m457361b[m clerk live mode enabled with supabase
+[33m8e94c5f[m supabase was created and user id generation task implemented
+[33m1536c95[m Portfolio allocation tool ui and ux logic was implemented
+[33me03f976[m Position size calculator complete logic and ui updated
+[33m771321c[m Ads format changed and implemented in all the pages
+[33me738f06[m Add Upstox logo and update Home page partners section
+[33ma0e7fcb[m Major UI changes and object wise course page logic implemented
+[33m99c7bae[m course page added
+[33m28e34ae[m ads error fixed in financial statement generator page
+[33mc72495d[m minor updates (menu realignment , footer content added, logo changed)
+[33m7acb08f[m FS page minor updates(Ads added , Footer social media links added )
+[33m5f71b91[m fs tool bug update
+[33m9d69405[m financial statement tool page added
+[33m8f8a31e[m[33m ([m[1;31morigin/master[m[33m)[m Restore project to stable old version

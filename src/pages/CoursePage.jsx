@@ -9,6 +9,12 @@ import Seo from "../components/Seo";
 
 
 <section className="max-w-6xl mx-auto px-6 py-20 text-gray-700">
+  // CourseListingPage.jsx (for /course?page=2)
+<Seo 
+  title="Trading Courses for Beginners & Traders | Finxbox - Page 2"
+  description="Browse page 2 of our trading courses..."
+  canonicalPath="/course?page=2" // Each paginated page is canonical to itself
+/>
 
   <h2 className="text-2xl font-semibold text-gray-900 mb-4">
     Stock Market Courses Designed for Practical Learning
@@ -83,6 +89,15 @@ const CoursePage = () => {
 
   return (
     <div className="min-h-screen bg-[#FAFAFB]">
+        <>
+      <Seo
+        title={`${course.title} | Finxbox`}
+        description={course.description}
+      />
+
+      <h1>{course.title}</h1>
+      {/* rest of page */}
+    </>
 
       {/* ================= HERO ================= */}
       <section className="relative overflow-hidden border-b border-gray-200">

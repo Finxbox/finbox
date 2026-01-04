@@ -5,6 +5,17 @@ import Seo from "../components/Seo";
 const Courses = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+      <>
+      <Seo 
+        title={`${course.title} | Trading Course by ${course.mentor} – Finxbox`}
+        description={course.shortDescription}
+        canonicalPath={`/course/${course.slug}`} // Important: Use slug not ID
+      />
+      
+      <h1>{course.title}</h1>
+      
+      {/* Course content */}
+    </>
       <div className="max-w-7xl mx-auto">
 
         {/* HEADER */}

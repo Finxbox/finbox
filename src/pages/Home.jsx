@@ -8,11 +8,24 @@ import Seo from "../components/Seo";
 
 <section className="max-w-6xl mx-auto px-6 py-20 text-gray-700">
 
-  <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-    Finxbox – Smart Financial Tools for Traders & Investors
-  </h1>
-
-  <p className="text-lg mb-6 max-w-4xl">
+ <>
+      <Seo 
+        title="Finxbox – Smart Financial Tools for Traders & Investors in India"
+        description="Finxbox helps Indian traders and investors make better decisions using portfolio calculators, position sizing tools, financial analysis, and structured market education."
+        // canonicalPath is optional since you're on the home page
+        // Your component will auto-generate: https://www.finxbox.com
+      />
+      
+      {/* Hidden H1 for SEO */}
+      <h1 className="sr-only">Smart Financial Tools for Traders and Investors in India</h1>
+      
+      {/* Your existing hero/design */}
+      <div className="hero">
+        <h2 className="hero-title">Welcome to Finxbox</h2>
+        {/* ... */}
+      </div>
+    </>
+   <p className="text-lg mb-6 max-w-4xl">
     Finxbox is a modern financial platform built for traders and investors
     who want clarity, discipline, and data-driven decision-making.
     We provide powerful yet simple financial tools that help you analyze
@@ -24,11 +37,7 @@ import Seo from "../components/Seo";
     refining strategies, Finxbox helps you move away from guesswork and
     emotional decisions by focusing on numbers, logic, and structure.
   </p>
-
-  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-    Who Is Finxbox For?
-  </h2>
-
+  
   <p className="mb-6 max-w-4xl">
     Finxbox is designed for active traders, long-term investors, and finance
     enthusiasts who want better control over their financial journey.

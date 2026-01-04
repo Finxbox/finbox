@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 
+import { HelmetProvider } from 'react-helmet-async';
+
 import Home from "./pages/Home";
 import PortfolioCalculator from "./pages/PortfolioCalculator";
 import PositionSizeCalculator from "./pages/PositionSizeCalculator";
@@ -13,6 +15,7 @@ import FinancialDashboard from "./pages/FinancialDashboard";
 import Store from "./pages/Store";
 import Courses from "./pages/Courses";
 import CoursePage from "./pages/CoursePage";
+import React from "./pages/PremiumJournal";
 
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
@@ -75,3 +78,4 @@ const App = () => {
 };
 
 export default App;
+

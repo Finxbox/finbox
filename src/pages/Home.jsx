@@ -7,7 +7,12 @@ import Seo from "../components/Seo";
 {/* ================= SEO CONTENT ================= */}
 
 <section className="max-w-6xl mx-auto px-6 py-20 text-gray-700">
-
+ <Seo
+        title="Finxbox – Smart Financial Tools for Traders & Investors"
+        description="Finxbox is a modern financial platform built for traders and investors who want clarity, discipline, and data-driven decision-making. We provide powerful yet simple financial tools that help you analyze performance, manage risk, and improve consistency in trading and investing."
+      />
+      <meta name="keywords" content="Finxbox, financial tools, trading tools, investment tools, risk management, portfolio calculator, position size calculator, trading education, stock market tools, Indian stock market, trading discipline, data-driven investing" />
+      <meta robots="index, follow" />
   <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
     Finxbox – Smart Financial Tools for Traders & Investors
   </h1>
@@ -97,7 +102,7 @@ const stagger = {
 const Home = () => {
   return (
     <div className="bg-[#FAFAFB]">
-
+      
       {/* ================= HERO ================= */}
       <section className="relative overflow-hidden">
   {/* Subtle SaaS gradient background */}

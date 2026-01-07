@@ -24,7 +24,13 @@ import Seo from "../components/Seo.jsx";
 {/* ================= SEO CONTENT – FINANCIAL DASHBOARD ================= */}
 
 <section className="max-w-6xl mx-auto px-6 py-20 text-gray-700">
-
+ <Seo title="Financial Dashboard - Generate Clear Financial Statements" 
+      description="The Finxbox Financial Dashboard is a user-friendly tool that helps users generate and understand financial statements in a structured and simplified way." />
+      <meta name="keywords" content="Financial Dashboard, financial statements, income statement, expense tracking, financial analysis, Finxbox financial tools, personal finance management, small business finance, financial clarity, structured financial data" />
+      <meta name="robots" content="index, follow" />
+  <h1 className="text-3xl font-bold text-gray-900 mb-6">
+    Financial Dashboard: Generate Clear Financial Statements
+  </h1> 
   <h2 className="text-2xl font-semibold text-gray-900 mb-4">
     Generate Clear Financial Statements
   </h2>

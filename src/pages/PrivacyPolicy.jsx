@@ -1,3 +1,4 @@
+
 const PrivacyPolicy = () => {
   return (
     <div className="max-w-6xl mx-auto px-6 py-12 text-gray-800 leading-relaxed">
@@ -9,14 +10,13 @@ const PrivacyPolicy = () => {
       {/* Introduction */}
       <section className="space-y-4 mb-8">
         <p>
-          Welcome to <strong>Finxbox</strong>. We are committed to protecting
-          your privacy and being transparent about how our website operates.
-          Finxbox provides logic-based financial tools and calculators that
-          generate outputs such as income statements and financial summaries.
+          Welcome to <strong>Finxbox</strong>. We respect your privacy and are
+          committed to protecting the information shared by users while using
+          our website and services.
         </p>
         <p>
-          This Privacy Policy explains what information we do and do not
-          collect, how our tools work, and your rights as a user.
+          This Privacy Policy explains what information is collected, how it is
+          used, and how we protect user data.
         </p>
       </section>
 
@@ -24,67 +24,71 @@ const PrivacyPolicy = () => {
       <section className="space-y-3 mb-8">
         <h2 className="text-xl font-semibold">1. Scope of This Policy</h2>
         <p>
-          This Privacy Policy applies to the Finxbox website and all tools,
-          calculators, and utilities provided through it. It does not apply to
-          third-party websites that may be linked from Finxbox.
+          This Privacy Policy applies to the Finxbox website, software tools,
+          calculators, premium features, and downloadable reports offered
+          through the platform.
         </p>
       </section>
 
-      {/* Data Not Collected */}
+      {/* Information Collected */}
       <section className="space-y-3 mb-8">
         <h2 className="text-xl font-semibold">
-          2. Information We Do Not Collect
+          2. Information We Collect
         </h2>
-        <p>Finxbox does not collect, store, or process any personal data.</p>
+        <p>
+          Finxbox collects limited information only to provide services and
+          support:
+        </p>
         <ul className="list-disc pl-6 space-y-1">
-          <li>No names, email addresses, or phone numbers</li>
-          <li>No financial or income data storage</li>
-          <li>No login credentials (we do not offer accounts)</li>
-          <li>No IP tracking or behavioral analytics</li>
-          <li>No saved calculations or reports</li>
+          <li>Email address provided for customer support or communication</li>
+          <li>Payment status and transaction reference from payment gateways</li>
         </ul>
+        <p>
+          Finxbox does <strong>not</strong> store card details, bank information,
+          or sensitive payment credentials.
+        </p>
       </section>
 
       {/* How Tools Work */}
       <section className="space-y-3 mb-8">
         <h2 className="text-xl font-semibold">
-          3. How Our Financial Tools Work
+          3. How Our Tools Work
         </h2>
         <p>
-          All tools on Finxbox operate entirely on the client side (within your
-          browser).
+          Most financial tools and calculators on Finxbox operate on the client
+          side (within your browser).
         </p>
         <ul className="list-disc pl-6 space-y-1">
-          <li>Inputs are processed locally in real time</li>
-          <li>No data is sent to or stored on our servers</li>
-          <li>
-            Data is cleared automatically when you refresh or close the page
-          </li>
+          <li>User inputs are processed temporarily</li>
+          <li>No financial data is permanently stored by Finxbox</li>
+          <li>Data is cleared when the session ends</li>
         </ul>
       </section>
 
-      {/* Data Retention */}
+      {/* Payments */}
       <section className="space-y-3 mb-8">
-        <h2 className="text-xl font-semibold">4. Data Storage & Retention</h2>
+        <h2 className="text-xl font-semibold">4. Payments & Security</h2>
         <p>
-          Since Finxbox does not collect any user data, there is no data
-          retention, backup, or archival of user inputs or outputs.
+          Payments on Finxbox are processed securely through authorized
+          third-party payment gateways such as PayU or Razorpay.
+        </p>
+        <p>
+          Finxbox does not have access to or store users’ card numbers, CVV,
+          banking details, or UPI credentials.
         </p>
       </section>
 
       {/* Cookies */}
       <section className="space-y-3 mb-8">
         <h2 className="text-xl font-semibold">
-          5. Cookies & Tracking Technologies
+          5. Cookies & Tracking
         </h2>
         <p>
-          Finxbox does not use cookies, trackers, pixels, or analytics tools to
-          monitor users.
+          Finxbox does not use cookies for advertising or tracking user behavior.
         </p>
         <p className="text-sm text-gray-600">
-          Note: Our hosting provider may use essential technical cookies for
-          performance or security. These do not contain personally identifiable
-          information.
+          Our hosting provider may use essential cookies strictly for security
+          and performance purposes.
         </p>
       </section>
 
@@ -92,75 +96,58 @@ const PrivacyPolicy = () => {
       <section className="space-y-3 mb-8">
         <h2 className="text-xl font-semibold">6. Third-Party Links</h2>
         <p>
-          Finxbox may contain links to third-party websites for reference or
-          educational purposes. We do not control and are not responsible for
-          their content or privacy practices.
+          Finxbox may include links to third-party websites for reference or
+          educational purposes. We are not responsible for their privacy
+          practices.
         </p>
       </section>
 
-      {/* Ads */}
+      {/* Data Protection */}
       <section className="space-y-3 mb-8">
-        <h2 className="text-xl font-semibold">
-          7. Advertising & Monetization
-        </h2>
+        <h2 className="text-xl font-semibold">7. Data Protection</h2>
         <p>
-          If advertisements are displayed in the future, Finxbox will not share
-          user data with advertisers. Any third-party advertising services will
-          operate under their own privacy policies.
-        </p>
-      </section>
-
-      {/* Legal */}
-      <section className="space-y-3 mb-8">
-        <h2 className="text-xl font-semibold">8. Legal Compliance</h2>
-        <p>
-          This Privacy Policy is aligned with the Information Technology Act,
-          2000 (India) and applicable data protection principles, including
-          GDPR-related transparency requirements.
+          We take reasonable security measures to protect user information from
+          unauthorized access, misuse, or disclosure.
         </p>
       </section>
 
       {/* Children */}
       <section className="space-y-3 mb-8">
-        <h2 className="text-xl font-semibold">9. Children’s Privacy</h2>
+        <h2 className="text-xl font-semibold">8. Children’s Privacy</h2>
         <p>
-          Finxbox does not knowingly collect information from children under the
-          age of 13. As no personal data is collected, the platform may be used
-          for educational purposes.
+          Finxbox does not knowingly collect personal information from children
+          under the age of 13.
         </p>
       </section>
 
-      {/* Disclaimer */}
+      {/* Legal */}
       <section className="space-y-3 mb-8">
-        <h2 className="text-xl font-semibold">
-          10. Financial Disclaimer
-        </h2>
+        <h2 className="text-xl font-semibold">9. Legal Compliance</h2>
         <p>
-          All tools and outputs provided by Finxbox are for educational and
-          informational purposes only and do not constitute financial advice.
+          This Privacy Policy complies with the Information Technology Act, 2000
+          and applicable Indian data protection laws.
         </p>
       </section>
 
       {/* Changes */}
       <section className="space-y-3 mb-8">
         <h2 className="text-xl font-semibold">
-          11. Changes to This Policy
+          10. Changes to This Policy
         </h2>
         <p>
-          We may update this Privacy Policy from time to time. Any changes will
-          be posted on this page with an updated revision date.
+          Finxbox may update this Privacy Policy from time to time. Updates will
+          be reflected on this page.
         </p>
       </section>
 
       {/* Contact */}
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">12. Contact Us</h2>
+        <h2 className="text-xl font-semibold">11. Contact Information</h2>
         <p>
-          If you have questions regarding this Privacy Policy, you may contact
-          us at:
+          For privacy-related queries, contact:
         </p>
         <p>
-          <strong>Email:</strong> info.finxbox@gmail.com
+          <strong>Email:</strong> support@finxbox.com
         </p>
       </section>
     </div>

@@ -13,11 +13,11 @@ import FinancialDashboard from "./pages/FinancialDashboard";
 import Store from "./pages/Store";
 import Courses from "./pages/Courses";
 import CoursePage from "./pages/CoursePage";
+import PremiumJournal from "./pages/PremiumJournal";
 
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import CookiePolicy from "./pages/CookiePolicy";
-import PremiumJournal from "./pages/PremiumJournal";
 import ContactUs from "./pages/ContactUs";
 
 import Analytics from "./components/Analytics";
@@ -64,11 +64,13 @@ const App = () => {
           <Route path="/course/:courseId" element={<CoursePage />} />
         </Route>
 
-        {/* LEGAL */}
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+      {/* LEGAL PAGES (WITH HEADER & FOOTER) */}
+      <Route element={<StoreLayout />}>
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
         <Route path="/cookie-policy" element={<CookiePolicy />} />
         <Route path="/contact-us" element={<ContactUs />} />
+      </Route>    
       </Routes>
     </>
   );

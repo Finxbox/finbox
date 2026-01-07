@@ -5,6 +5,12 @@ import Seo from "../components/Seo";
 const Courses = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+      <seo 
+        title="Courses - Structured Trading Bootcamps"
+        description="Explore Finxbox's structured trading bootcamps designed to help you trade with clarity, confidence, and discipline."
+      /> 
+      <meta name="keywords" content="Finxbox courses, trading bootcamps, stock market education, trading courses India, investment courses, trading mentorship, stock market learning, Finxbox learning programs" />
+      <meta name="robots" content="index, follow" />
       <div className="max-w-7xl mx-auto">
 
         {/* HEADER */}
@@ -16,6 +22,17 @@ const Courses = () => {
             Structured bootcamps designed to help you trade with clarity,
             confidence, and discipline.
           </p>
+           <section className="max-w-5xl mx-auto px-6 py-16 text-gray-700">
+        <h2 className="text-2xl font-semibold mb-4">
+          About This Stock Market Course
+        </h2>
+        <p>
+          This course is designed to help learners understand real-world stock
+          market concepts through structured lessons, live sessions, and
+          practical examples. It focuses on clarity, risk awareness, and
+          disciplined decision-making.
+        </p>
+      </section>
         </div>
 
         {/* COURSE GRID */}
@@ -70,15 +87,3 @@ const Courses = () => {
 };
 
 export default Courses;
-
-<section className="max-w-5xl mx-auto px-6 py-16 text-gray-700">
-  <h2 className="text-2xl font-semibold mb-4">
-    About This Stock Market Course
-  </h2>
-  <p>
-    This course is designed to help learners understand real-world stock
-    market concepts through structured lessons, live sessions, and
-    practical examples. It focuses on clarity, risk awareness, and
-    disciplined decision-making.
-  </p>
-</section>

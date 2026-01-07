@@ -1,33 +1,26 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 
-const BASE_URL = "https://finxbox.com";
+const SITE_URL = "https://finxbox.com";
 
-const Seo = ({ title, description }) => {
-  const robots = "index,follow";
-  const { pathname } = useLocation();
+const Seo = ({
+  title = "Finxbox – Financial Tools & Premium Software",
+  description = "Finxbox provides financial tools, calculators, and premium software features for traders and investors.",
+  robots = "index, follow",
+}) => {
+  const location = useLocation();
 
-  const canonicalUrl =
-    pathname === "/"
-      ? BASE_URL
-      : `${BASE_URL}${pathname}`;
+  // Automatically build canonical URL
+  const canonicalUrl = `${SITE_URL}${location.pathname}`;
 
   return (
     <Helmet>
       <title>{title}</title>
+
       <meta name="description" content={description} />
       <meta name="robots" content={robots} />
 
-      {/* Open Graph */}
-      <meta property="og:title" content={title} />
-      <meta property="og:description" content={description} />
-      <meta property="og:type" content="website" />
-
-      {/* meta */}
-      <meta name="meta:card" content="summary_large_image" />
-      <meta name="meta:title" content={title} />
-      <meta name="meta:description" content={description} />
-      <meta name="description" content={description} />
+      {/* AUTO CANONICAL */}
       <link rel="canonical" href={canonicalUrl} />
     </Helmet>
   );

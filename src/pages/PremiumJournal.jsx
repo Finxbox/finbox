@@ -7,6 +7,10 @@ import Seo from "../components/Seo";
 
 // ===================== seo =====================
 <section className="max-w-6xl mx-auto px-6 py-16 text-gray-700">
+  <Seo  
+    title="Premium Journal | Finxbox" 
+    description="Access your Premium Trading Journal on Finxbox to track, analyze, and improve your trading performance with advanced features and insights."
+  />
   <h2 className="text-2xl font-semibold mb-4">
     Maintain a Disciplined Trading Journal
   </h2>

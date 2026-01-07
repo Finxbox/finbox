@@ -1,7 +1,8 @@
-
+import Seo from "../components/Seo";
 const PrivacyPolicy = () => {
   return (
     <div className="max-w-6xl mx-auto px-6 py-12 text-gray-800 leading-relaxed">
+      <Seo title="Privacy Policy - Finxbox" description="Learn about our privacy policy." />
       <h1 className="text-3xl font-bold mb-2">Privacy Policy</h1>
       <p className="text-sm text-gray-500 mb-8">
         Last updated: {new Date().toLocaleDateString()}

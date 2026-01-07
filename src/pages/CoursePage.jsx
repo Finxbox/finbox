@@ -9,7 +9,10 @@ import Seo from "../components/Seo";
 
 
 <section className="max-w-6xl mx-auto px-6 py-20 text-gray-700">
-
+  <Seo
+    title="Stock Market Courses - Learn Trading with Finxbox"
+    description="Explore Finxbox's stock market courses designed for traders and investors. Learn price action, technical analysis, and trading strategies with expert mentors."
+  /> 
   <h2 className="text-2xl font-semibold text-gray-900 mb-4">
     Stock Market Courses Designed for Practical Learning
   </h2>

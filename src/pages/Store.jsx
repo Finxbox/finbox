@@ -1,6 +1,6 @@
 import StoreComp from "../components/StoreLayout/StoreComp";
 import DematCTA from "../components/utility/DematCTA";
-
+import Seo from "../components/Seo";
 function Store() {
   return (
     <div>
@@ -14,7 +14,10 @@ export default Store;
 {/* ================= SEO CONTENT – STORE PAGE ================= */}
 
 <section className="max-w-6xl mx-auto px-6 py-20 text-gray-700">
-
+  <Seo 
+    title="Finxbox Store | Curated Trading Books for Market Clarity"
+    description="Explore the Finxbox Store for a curated selection of trading and stock market books designed to enhance your market understanding and trading skills."
+  />  
   <h2 className="text-2xl font-semibold text-gray-900 mb-4">
     Curated Trading Books for Market Clarity
   </h2>

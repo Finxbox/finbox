@@ -1,1104 +1,3289 @@
-// src/pages/PremiumJournal.jsx
-import { useState, useEffect } from "react";
-import { useUser, useClerk } from "@clerk/clerk-react";
-import { supabase } from "../lib/supabase";
-import { Download, Filter, Search, TrendingUp, TrendingDown, Calendar, BarChart3, FileSpreadsheet, Trash2, Eye, RefreshCw } from "lucide-react";
-import Seo from "../components/Seo";
+import React from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Save,
+  X,
+  TrendingUp,
+  TrendingDown,
+  Calendar,
+  DollarSign,
+  Target,
+  AlertCircle,
+  CheckCircle,
+  BarChart3,
+  Filter,
+  Download,
+  Upload,
+  RefreshCw,
+  PieChart,
+  Shield,
+  Brain,
+  Zap,
+  Moon,
+  Sun,
+  MoreVertical,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  EyeOff,
+  Wallet,
+  Clock,
+  Percent,
+  Hash,
+  Search,
+  Grid,
+  List,
+  Layers,
+  Database,
+  Share2,
+  Printer,
+  BookOpen,
+  Video,
+  Headphones,
+  Users,
+  Star,
+  Crown,
+  Gem,
+  Rocket,
+  Sparkles,
+  Target as TargetIcon,
+  LineChart,
+  BarChart,
+  PieChart as PieChartIcon,
+  Activity,
+  AlertTriangle,
+  Coffee,
+  Award,
+  Home,
+  Settings,
+  User,
+  Bell,
+  HelpCircle,
+  ChevronRight,
+  ChevronLeft,
+  Maximize2,
+  Minimize2,
+  ExternalLink,
+  Copy,
+  Check,
+  Menu,
+  Globe,
+  Smartphone,
+  HardDrive,
+  Cloud,
+  Wifi,
+  Lock,
+  Unlock,
+  ScatterChart,
+  Cpu,
+  Server,
+  Mail,
+  MessageSquare,
+} from "lucide-react";
 
-// ===================== seo =====================
-<section className="max-w-6xl mx-auto px-6 py-16 text-gray-700">
-  <Seo  
-    title="Premium Journal | Finxbox" 
-    description="Access your Premium Trading Journal on Finxbox to track, analyze, and improve your trading performance with advanced features and insights."
-  />
-  <h2 className="text-2xl font-semibold mb-4">
-    Maintain a Disciplined Trading Journal
-  </h2>
-  <p>
-    A trading journal helps traders review decisions, track emotions, and
-    improve execution over time. Finxbox provides a structured journaling
-    system designed to support long-term performance improvement.
-  </p>
-</section>
+// Chart components
+import {
+  LineChart as RechartsLineChart,
+  Line,
+  BarChart as RechartsBarChart,
+  Bar,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Treemap,
+} from "recharts";
 
-
-const PremiumJournal = () => {
-  const { user, isLoaded } = useUser();
-  const { openSignIn } = useClerk();
+const TradingJournalPro = () => {
+  // Theme state
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('trading-journal-theme') || 'light';
+    }
+    return 'light';
+  });
   
-  // =====================
-  // STATE MANAGEMENT
-  // =====================
-  const [savedReports, setSavedReports] = useState([]);
-  const [filteredReports, setFilteredReports] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
+  // State management
+  const [trades, setTrades] = useState([]);
+  const [filteredTrades, setFilteredTrades] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingTrade, setEditingTrade] = useState(null);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [exportFormat, setExportFormat] = useState('csv');
+  const [importing, setImporting] = useState(false);
+  const [showPerformanceInsights, setShowPerformanceInsights] = useState(true);
+  const [showRiskMetrics, setShowRiskMetrics] = useState(true);
+  const [showCharts, setShowCharts] = useState(true);
+  const [selectedTimeframe, setSelectedTimeframe] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showHiddenTrades, setShowHiddenTrades] = useState(false);
+  const [quickActionsOpen, setQuickActionsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [aiInsights, setAiInsights] = useState(null);
+  const [loadingAiInsights, setLoadingAiInsights] = useState(false);
+  const [tradeTags, setTradeTags] = useState({});
+  const [tradeNotesExpanded, setTradeNotesExpanded] = useState({});
+  const [selectedTrades, setSelectedTrades] = useState(new Set());
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [riskLevel, setRiskLevel] = useState('medium');
+  const [currency, setCurrency] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('trading-journal-currency') || 'USD';
+    }
+    return 'USD';
+  });
+  const [performanceGoals, setPerformanceGoals] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('trading-journal-goals');
+      return saved ? JSON.parse(saved) : {
+        monthlyProfitTarget: 5000,
+        winRateTarget: 60,
+        maxDailyLoss: 1000,
+        tradesPerMonth: 15,
+      };
+    }
+    return {
+      monthlyProfitTarget: 5000,
+      winRateTarget: 60,
+      maxDailyLoss: 1000,
+      tradesPerMonth: 15,
+    };
+  });
+
+  // Enhanced stats
   const [stats, setStats] = useState({
-    totalReports: 0,
+    totalTrades: 0,
+    winRate: 0,
     totalProfit: 0,
     totalLoss: 0,
-    winRate: 0,
-    avgRisk: 0,
-    totalTrades: 0,
+    netProfit: 0,
+    avgWin: 0,
+    avgLoss: 0,
+    largestWin: 0,
+    largestLoss: 0,
+    profitFactor: 0,
+    expectancy: 0,
+    sharpeRatio: 0,
+    maxDrawdown: 0,
+    recoveryFactor: 0,
+    avgHoldingPeriod: 0,
+    winStreak: 0,
+    lossStreak: 0,
+    consistencyScore: 0,
+    emotionScore: 0,
+    disciplineScore: 0,
+    overallScore: 0,
+    dailyPnL: [],
+    monthlyPerformance: [],
   });
-  
-  // =====================
-  // FILTER & SEARCH
-  // =====================
-  const [searchTerm, setSearchTerm] = useState("");
-  const [dateRange, setDateRange] = useState({
-    startDate: "",
-    endDate: "",
+
+  // Filters
+  const [filters, setFilters] = useState({
+    status: 'all',
+    tradeType: 'all',
+    dateRange: 'all',
+    symbol: '',
+    minProfit: '',
+    maxProfit: '',
+    winOnly: false,
+    lossOnly: false,
+    tags: [],
+    riskLevel: 'all',
+    holdingPeriod: 'all',
   });
-  const [tradeTypeFilter, setTradeTypeFilter] = useState("ALL");
-  const [profitFilter, setProfitFilter] = useState("ALL");
-  const [sortBy, setSortBy] = useState("newest");
-  const [selectedReport, setSelectedReport] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [reportToDelete, setReportToDelete] = useState(null);
 
-  // =====================
-  // INITIALIZE & LOAD DATA
-  // =====================
-  useEffect(() => {
-    const initializePage = async () => {
-      if (!isLoaded) return;
-      
-      if (!user) {
-        // Redirect to login or show login prompt
-        const shouldLogin = confirm("You need to login to access your premium trading journal. Would you like to login now?");
-        if (shouldLogin) {
-          openSignIn();
-        } else {
-          window.location.href = "/";
-        }
-        return;
-      }
-      
-      await checkPremiumStatus();
-    };
-    
-    initializePage();
-  }, [user, isLoaded]);
+  // Form state with validation
+  const [formData, setFormData] = useState({
+    symbol: "",
+    tradeType: "BUY",
+    entryPrice: "",
+    exitPrice: "",
+    quantity: "",
+    entryDate: new Date().toISOString().split('T')[0],
+    exitDate: "",
+    stopLoss: "",
+    target: "",
+    notes: "",
+    status: "OPEN",
+    tags: [],
+    emotion: "neutral",
+    confidence: 5,
+    strategy: "",
+    broker: "",
+    commission: "",
+    fees: "",
+    slippage: "",
+    screenshot: "",
+    riskAmount: "",
+    riskPercent: "",
+    rewardRiskRatio: "",
+    marketCondition: "normal",
+    timeOfDay: "",
+    mistakes: [],
+    lessons: "",
+    setup: "",
+    exitReason: "",
+    improvementAreas: [],
+    rating: 0,
+    hidden: false,
+    pinned: false,
+  });
 
-  useEffect(() => {
-    if (isPremium && user) {
-      loadSavedReports();
-    }
-  }, [isPremium, user]);
+  // Validation errors
+  const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    applyFilters();
-  }, [savedReports, searchTerm, dateRange, tradeTypeFilter, profitFilter, sortBy]);
-
-  // =====================
-  // AUTHENTICATION & PREMIUM CHECKS
-  // =====================
-  const checkPremiumStatus = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('is_premium')
-        .eq('id', user.id)
-        .single();
-        
-      if (error) {
-        console.error("Error checking premium status:", error);
-        setIsPremium(false);
-        return;
-      }
-      
-      setIsPremium(data.is_premium);
-      
-      if (!data.is_premium) {
-        const upgrade = confirm("This is a premium feature. Upgrade to access your trading journal. Would you like to upgrade?");
-        if (upgrade) {
-          window.location.href = "/pricing";
-        } else {
-          window.location.href = "/";
-        }
-      }
-    } catch (error) {
-      console.error("Error checking premium status:", error);
-      setIsPremium(false);
-    }
+  const PremiumJournal = () => {
+  return (
+    <div>
+      <h1>Premium Journal</h1>
+      {/* Your PremiumJournal content here */}
+    </div>
+  );
+};
+  // Currency formatting
+  const currencyFormats = {
+    'USD': { symbol: '$', locale: 'en-US' },
+    'EUR': { symbol: '€', locale: 'en-EU' },
+    'GBP': { symbol: '£', locale: 'en-GB' },
+    'INR': { symbol: '₹', locale: 'en-IN' },
+    'JPY': { symbol: '¥', locale: 'ja-JP' },
+    'CNY': { symbol: '¥', locale: 'zh-CN' },
+    'CAD': { symbol: 'C$', locale: 'en-CA' },
+    'AUD': { symbol: 'A$', locale: 'en-AU' },
   };
 
-  // =====================
-  // LOAD SAVED REPORTS
-  // =====================
-  const loadSavedReports = async () => {
-    if (!user) return;
-    
+  const formatCurrency = (amount) => {
+    const format = currencyFormats[currency];
+    return `${format.symbol}${Math.abs(amount).toLocaleString(format.locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  };
+
+  // Theme toggle
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('trading-journal-theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
+
+  // Initialize theme
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  // Load trades from localStorage
+  const loadTrades = useCallback(() => {
     try {
       setLoading(true);
-      
-      const { data, error } = await supabase
-        .from('saved_reports')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-        
-      if (error) {
-        if (error.message.includes("row-level security")) {
-          alert("You don't have permission to access this feature. Please ensure you have an active premium subscription.");
-          return;
-        }
-        throw error;
+      const savedTrades = localStorage.getItem('trading-journal-pro-trades');
+      if (savedTrades) {
+        const parsedTrades = JSON.parse(savedTrades);
+        setTrades(parsedTrades);
       }
-      
-      setSavedReports(data || []);
-      calculateStats(data || []);
-      
     } catch (error) {
-      console.error("Error loading saved reports:", error);
-      alert("Failed to load your trading journal. Please try again.");
+      console.error("Error loading trades:", error);
+      showNotification('error', 'Failed to load trades');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // Save trades to localStorage
+  const saveTradesToStorage = (tradesToSave) => {
+    try {
+      localStorage.setItem('trading-journal-pro-trades', JSON.stringify(tradesToSave));
+    } catch (error) {
+      console.error("Error saving trades:", error);
+      showNotification('error', 'Failed to save trades');
+    }
   };
 
-  // =====================
-  // CALCULATE STATISTICS
-  // =====================
-  const calculateStats = (reports) => {
-    if (!reports.length) {
-      setStats({
-        totalReports: 0,
+  // Save settings
+  const saveSettings = () => {
+    localStorage.setItem('trading-journal-currency', currency);
+    localStorage.setItem('trading-journal-goals', JSON.stringify(performanceGoals));
+  };
+
+  // Calculate enhanced stats
+  const calculateEnhancedStats = useCallback(() => {
+    const closedTrades = trades.filter(trade => trade.status === "CLOSED");
+    const openTrades = trades.filter(trade => trade.status === "OPEN");
+    
+    if (closedTrades.length === 0) {
+      setStats(prev => ({
+        ...prev,
+        totalTrades: trades.length,
+        openTrades: openTrades.length,
+        closedTrades: 0,
+        winRate: 0,
         totalProfit: 0,
         totalLoss: 0,
-        winRate: 0,
-        avgRisk: 0,
-        totalTrades: 0,
-      });
+        netProfit: 0,
+      }));
       return;
     }
-    
+
     let totalProfit = 0;
     let totalLoss = 0;
-    let winningTrades = 0;
-    let totalTrades = 0;
-    let totalRisk = 0;
-    
-    reports.forEach(report => {
-      const data = report.report_data;
-      if (data) {
-        totalTrades++;
-        totalRisk += data.actualRisk || 0;
-        
-        // Calculate P&L based on target vs entry
-        if (data.target && data.entryPrice) {
-          const priceDiff = data.target - data.entryPrice;
-          const tradeProfit = priceDiff * (data.finalQty || 0);
-          
-          if (tradeProfit > 0) {
-            totalProfit += tradeProfit;
-            winningTrades++;
-          } else {
-            totalLoss += Math.abs(tradeProfit);
-          }
-        }
+    let wins = 0;
+    let winAmounts = [];
+    let lossAmounts = [];
+    let holdingPeriods = [];
+    let dailyPnL = {};
+    let monthlyPerformance = {};
+    let winStreak = 0;
+    let lossStreak = 0;
+    let currentWinStreak = 0;
+    let currentLossStreak = 0;
+    let maxDrawdown = 0;
+    let peak = 0;
+    let runningTotal = 0;
+
+    closedTrades.forEach(trade => {
+      const pnl = calculatePnL(trade);
+      runningTotal += pnl;
+      peak = Math.max(peak, runningTotal);
+      maxDrawdown = Math.max(maxDrawdown, peak - runningTotal);
+
+      if (pnl > 0) {
+        totalProfit += pnl;
+        wins++;
+        winAmounts.push(pnl);
+        currentWinStreak++;
+        currentLossStreak = 0;
+        winStreak = Math.max(winStreak, currentWinStreak);
+      } else {
+        totalLoss += Math.abs(pnl);
+        lossAmounts.push(Math.abs(pnl));
+        currentLossStreak++;
+        currentWinStreak = 0;
+        lossStreak = Math.max(lossStreak, currentLossStreak);
+      }
+
+      // Calculate holding period
+      if (trade.entryDate && trade.exitDate) {
+        const entry = new Date(trade.entryDate);
+        const exit = new Date(trade.exitDate);
+        const days = (exit - entry) / (1000 * 60 * 60 * 24);
+        holdingPeriods.push(days);
+      }
+
+      // Daily P&L
+      const date = trade.exitDate || trade.entryDate;
+      if (date) {
+        dailyPnL[date] = (dailyPnL[date] || 0) + pnl;
+      }
+
+      // Monthly performance
+      if (date) {
+        const month = date.substring(0, 7);
+        monthlyPerformance[month] = (monthlyPerformance[month] || 0) + pnl;
       }
     });
-    
-    const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
-    const avgRisk = totalTrades > 0 ? totalRisk / totalTrades : 0;
-    
+
+    const winRate = (wins / closedTrades.length) * 100;
+    const avgWin = winAmounts.length > 0 ? winAmounts.reduce((a, b) => a + b, 0) / winAmounts.length : 0;
+    const avgLoss = lossAmounts.length > 0 ? lossAmounts.reduce((a, b) => a + b, 0) / lossAmounts.length : 0;
+    const largestWin = winAmounts.length > 0 ? Math.max(...winAmounts) : 0;
+    const largestLoss = lossAmounts.length > 0 ? Math.max(...lossAmounts) : 0;
+    const profitFactor = totalLoss > 0 ? totalProfit / totalLoss : totalProfit > 0 ? Infinity : 0;
+    const expectancy = (winRate / 100 * avgWin) - ((100 - winRate) / 100 * avgLoss);
+    const sharpeRatio = calculateSharpeRatio(closedTrades);
+    const avgHoldingPeriod = holdingPeriods.length > 0 ? holdingPeriods.reduce((a, b) => a + b, 0) / holdingPeriods.length : 0;
+    const recoveryFactor = maxDrawdown > 0 ? totalProfit / maxDrawdown : totalProfit > 0 ? Infinity : 0;
+
+    // Calculate scores
+    const consistencyScore = calculateConsistencyScore(closedTrades);
+    const emotionScore = calculateEmotionScore(trades);
+    const disciplineScore = calculateDisciplineScore(trades);
+    const overallScore = Math.round((consistencyScore + emotionScore + disciplineScore) / 3);
+
     setStats({
-      totalReports: reports.length,
-      totalProfit,
-      totalLoss,
-      winRate,
-      avgRisk,
-      totalTrades,
+      totalTrades: trades.length,
+      openTrades: openTrades.length,
+      closedTrades: closedTrades.length,
+      winRate: Math.round(winRate * 100) / 100,
+      totalProfit: Math.round(totalProfit * 100) / 100,
+      totalLoss: Math.round(totalLoss * 100) / 100,
+      netProfit: Math.round((totalProfit - totalLoss) * 100) / 100,
+      avgWin: Math.round(avgWin * 100) / 100,
+      avgLoss: Math.round(avgLoss * 100) / 100,
+      largestWin: Math.round(largestWin * 100) / 100,
+      largestLoss: Math.round(largestLoss * 100) / 100,
+      profitFactor: Math.round(profitFactor * 100) / 100,
+      expectancy: Math.round(expectancy * 100) / 100,
+      sharpeRatio: Math.round(sharpeRatio * 100) / 100,
+      maxDrawdown: Math.round(maxDrawdown * 100) / 100,
+      recoveryFactor: Math.round(recoveryFactor * 100) / 100,
+      avgHoldingPeriod: Math.round(avgHoldingPeriod * 100) / 100,
+      winStreak,
+      lossStreak,
+      consistencyScore,
+      emotionScore,
+      disciplineScore,
+      overallScore,
+      dailyPnL: Object.entries(dailyPnL).map(([date, pnl]) => ({ date, pnl })).sort((a, b) => new Date(a.date) - new Date(b.date)),
+      monthlyPerformance: Object.entries(monthlyPerformance).map(([month, pnl]) => ({ month, pnl })).sort((a, b) => a.month.localeCompare(b.month)),
     });
+  }, [trades]);
+
+  // Helper calculation functions
+  const calculatePnL = (trade) => {
+    if (trade.status !== "CLOSED" || !trade.exitPrice) return 0;
+    const entryValue = parseFloat(trade.entryPrice) * parseFloat(trade.quantity);
+    const exitValue = parseFloat(trade.exitPrice) * parseFloat(trade.quantity);
+    let pnl = trade.tradeType === "BUY" ? exitValue - entryValue : entryValue - exitValue;
+    
+    // Subtract commissions and fees
+    const commission = parseFloat(trade.commission || 0);
+    const fees = parseFloat(trade.fees || 0);
+    pnl = pnl - commission - fees;
+    
+    return Math.round(pnl * 100) / 100;
   };
 
-  // =====================
-  // FILTER FUNCTIONS
-  // =====================
-  const applyFilters = () => {
-    let filtered = [...savedReports];
-    
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(report => {
-        const data = report.report_data;
-        const searchLower = searchTerm.toLowerCase();
-        
-        return (
-          (data.tradeType && data.tradeType.toLowerCase().includes(searchLower)) ||
-          (data.entryPrice && data.entryPrice.toString().includes(searchTerm)) ||
-          (data.created_at && data.created_at.toLowerCase().includes(searchLower))
-        );
-      });
-    }
-    
-    // Date range filter
-    if (dateRange.startDate) {
-      filtered = filtered.filter(report => {
-        const reportDate = new Date(report.created_at);
-        const startDate = new Date(dateRange.startDate);
-        return reportDate >= startDate;
-      });
-    }
-    
-    if (dateRange.endDate) {
-      filtered = filtered.filter(report => {
-        const reportDate = new Date(report.created_at);
-        const endDate = new Date(dateRange.endDate);
-        endDate.setHours(23, 59, 59, 999);
-        return reportDate <= endDate;
-      });
-    }
-    
-    // Trade type filter
-    if (tradeTypeFilter !== "ALL") {
-      filtered = filtered.filter(report => 
-        report.report_data?.tradeType === tradeTypeFilter
-      );
-    }
-    
-    // Profit filter
-    if (profitFilter === "PROFIT") {
-      filtered = filtered.filter(report => {
-        const data = report.report_data;
-        if (!data.target || !data.entryPrice) return false;
-        const priceDiff = data.target - data.entryPrice;
-        return priceDiff > 0;
-      });
-    } else if (profitFilter === "LOSS") {
-      filtered = filtered.filter(report => {
-        const data = report.report_data;
-        if (!data.target || !data.entryPrice) return false;
-        const priceDiff = data.target - data.entryPrice;
-        return priceDiff < 0;
-      });
-    }
-    
-    // Sort
-    filtered.sort((a, b) => {
-      const dateA = new Date(a.created_at);
-      const dateB = new Date(b.created_at);
-      
-      switch (sortBy) {
-        case "newest":
-          return dateB - dateA;
-        case "oldest":
-          return dateA - dateB;
-        case "profit_high":
-          return (b.report_data?.target || 0) - (a.report_data?.target || 0);
-        case "profit_low":
-          return (a.report_data?.target || 0) - (b.report_data?.target || 0);
-        case "risk_high":
-          return (b.report_data?.actualRisk || 0) - (a.report_data?.actualRisk || 0);
-        case "risk_low":
-          return (a.report_data?.actualRisk || 0) - (b.report_data?.actualRisk || 0);
-        default:
-          return dateB - dateA;
-      }
+  const calculateRisk = (trade) => {
+    if (!trade.stopLoss) return 0;
+    const riskPerShare = Math.abs(parseFloat(trade.entryPrice) - parseFloat(trade.stopLoss));
+    return riskPerShare * parseFloat(trade.quantity);
+  };
+
+  const calculateReward = (trade) => {
+    if (!trade.target) return 0;
+    const rewardPerShare = Math.abs(parseFloat(trade.target) - parseFloat(trade.entryPrice));
+    return rewardPerShare * parseFloat(trade.quantity);
+  };
+
+  const calculateRiskRewardRatio = (trade) => {
+    const risk = calculateRisk(trade);
+    const reward = calculateReward(trade);
+    return risk > 0 ? Math.round((reward / risk) * 100) / 100 : 0;
+  };
+
+  const calculateSharpeRatio = (trades) => {
+    if (trades.length < 2) return 0;
+    const returns = trades.map(trade => {
+      const pnl = calculatePnL(trade);
+      const investment = parseFloat(trade.entryPrice) * parseFloat(trade.quantity);
+      return investment > 0 ? pnl / investment : 0;
     });
+    const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
+    const variance = returns.reduce((a, b) => a + Math.pow(b - avgReturn, 2), 0) / returns.length;
+    const stdDev = Math.sqrt(variance);
+    return stdDev > 0 ? Math.round((avgReturn / stdDev) * 100) / 100 : 0;
+  };
+
+  const calculateConsistencyScore = (trades) => {
+    if (trades.length < 3) return 50;
+    const pnls = trades.map(calculatePnL);
+    const avg = pnls.reduce((a, b) => a + b, 0) / pnls.length;
+    const variance = pnls.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / pnls.length;
+    const consistency = 100 - (Math.sqrt(variance) / Math.abs(avg || 1)) * 100;
+    return Math.max(0, Math.min(100, Math.round(consistency)));
+  };
+
+  const calculateEmotionScore = (trades) => {
+    const emotions = trades.map(t => t.emotion || 'neutral');
+    const emotionWeights = {
+      'confident': 100,
+      'calm': 90,
+      'neutral': 70,
+      'anxious': 40,
+      'fearful': 20,
+      'greedy': 30,
+      'frustrated': 30,
+    };
+    const avgScore = emotions.reduce((sum, emotion) => sum + (emotionWeights[emotion] || 50), 0) / emotions.length;
+    return Math.round(avgScore);
+  };
+
+  const calculateDisciplineScore = (trades) => {
+    let score = 50;
+    trades.forEach(trade => {
+      if (trade.stopLoss) score += 5;
+      if (trade.target) score += 5;
+      if (trade.notes && trade.notes.length > 10) score += 5;
+      if (trade.lessons) score += 10;
+      if (trade.mistakes && trade.mistakes.length > 0) score += 5;
+    });
+    return Math.min(100, Math.round(score));
+  };
+
+  // Form validation
+  const validateForm = () => {
+    const newErrors = {};
     
-    setFilteredReports(filtered);
+    if (!formData.symbol.trim()) newErrors.symbol = "Symbol is required";
+    if (!formData.entryPrice || parseFloat(formData.entryPrice) <= 0) 
+      newErrors.entryPrice = "Valid entry price is required";
+    if (!formData.quantity || parseFloat(formData.quantity) <= 0) 
+      newErrors.quantity = "Valid quantity is required";
+    if (!formData.entryDate) newErrors.entryDate = "Entry date is required";
+    if (formData.status === "CLOSED" && !formData.exitPrice) 
+      newErrors.exitPrice = "Exit price is required for closed trades";
+    if (formData.status === "CLOSED" && !formData.exitDate) 
+      newErrors.exitDate = "Exit date is required for closed trades";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  // =====================
-  // REPORT ACTIONS
-  // =====================
-  const handleViewReport = (report) => {
-    setSelectedReport(report);
-  };
-
-  const handleDeleteReport = (report) => {
-    setReportToDelete(report);
-    setShowDeleteModal(true);
-  };
-
-  const confirmDeleteReport = async () => {
-    if (!reportToDelete) return;
+  // Save trade
+  const saveTrade = (e) => {
+    e.preventDefault();
     
-    try {
-      const { error } = await supabase
-        .from('saved_reports')
-        .delete()
-        .eq('id', reportToDelete.id);
-        
-      if (error) throw error;
-      
-      // Update local state
-      setSavedReports(prev => prev.filter(r => r.id !== reportToDelete.id));
-      
-      // If deleting the currently viewed report, clear selection
-      if (selectedReport?.id === reportToDelete.id) {
-        setSelectedReport(null);
-      }
-      
-      alert("Report deleted successfully");
-      
-    } catch (error) {
-      console.error("Error deleting report:", error);
-      alert("Failed to delete report");
-    } finally {
-      setShowDeleteModal(false);
-      setReportToDelete(null);
-    }
-  };
-
-  // =====================
-  // EXPORT FUNCTIONS
-  // =====================
-  const exportToExcel = async () => {
-    if (!filteredReports.length) {
-      alert("No reports to export");
+    if (!validateForm()) {
+      showNotification('error', 'Please fix the errors in the form');
       return;
     }
-    
+
     try {
-      setExporting(true);
-      
-      // Prepare Excel data
-      const excelData = [
-        ["PREMIUM TRADING JOURNAL REPORT"],
-        ["Generated on:", new Date().toLocaleString()],
-        ["Total Reports:", filteredReports.length],
-        ["Total Trades:", stats.totalTrades],
-        ["Win Rate:", `${stats.winRate.toFixed(2)}%`],
-        ["Net P&L:", `₹${(stats.totalProfit - stats.totalLoss).toLocaleString()}`],
-        [],
-        ["ID", "Date", "Trade Type", "Entry", "Stop Loss", "Target", "Quantity", "Capital Used", "Risk Amount", "Risk %", "Cash Left", "Status", "Expected P&L"],
-        ...filteredReports.map((report, index) => {
-          const data = report.report_data || {};
-          const entry = data.entryPrice || 0;
-          const target = data.target || 0;
-          const quantity = data.finalQty || 0;
-          const expectedProfit = (target - entry) * quantity;
-          const status = target > entry ? "PROFIT" : target < entry ? "LOSS" : "BREAKEVEN";
-          
-          return [
-            index + 1,
-            new Date(report.created_at).toLocaleDateString(),
-            data.tradeType || "N/A",
-            `₹${entry}`,
-            `₹${data.stopLoss || 0}`,
-            `₹${target}`,
-            quantity,
-            `₹${data.capitalUsed || 0}`,
-            `₹${data.actualRisk || 0}`,
-            `${data.riskPercent || 0}%`,
-            `₹${data.cashLeft || 0}`,
-            status,
-            `₹${expectedProfit.toLocaleString()}`
-          ];
-        })
-      ];
-      
-      // Convert to CSV
-      const csvContent = excelData.map(row => 
-        row.map(cell => {
-          let cellValue = cell;
-          if (cellValue === null || cellValue === undefined) cellValue = "";
-          if (typeof cellValue === "string") {
-            if (cellValue.includes(',') || cellValue.includes('"') || cellValue.includes('\n')) {
-              return `"${cellValue.replace(/"/g, '""')}"`;
-            }
-          }
-          return cellValue;
-        }).join(',')
-      ).join('\n');
-      
-      // Download
-      const BOM = "\uFEFF";
-      const blob = new Blob([BOM + csvContent], { 
-        type: 'text/csv;charset=utf-8;' 
-      });
-      
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      
-      link.href = url;
-      link.download = `Premium_Trading_Journal_${new Date().toISOString().split('T')[0]}.csv`;
-      link.style.visibility = 'hidden';
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      setTimeout(() => {
-        alert(`✅ Premium Journal Report Generated!
-        
-📊 Reports: ${filteredReports.length}
-📈 Trades: ${stats.totalTrades}
-💰 Net P&L: ₹${(stats.totalProfit - stats.totalLoss).toLocaleString()}
-💾 File saved to downloads`);
-      }, 100);
-      
+      const tradeData = {
+        ...formData,
+        id: editingTrade ? editingTrade.id : `trade_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: editingTrade ? editingTrade.createdAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        pnl: calculatePnL(formData),
+        risk: calculateRisk(formData),
+        reward: calculateReward(formData),
+        riskRewardRatio: calculateRiskRewardRatio(formData),
+        tags: Array.isArray(formData.tags) ? formData.tags : formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+      };
+
+      // Save to trades
+      let updatedTrades;
+      if (editingTrade) {
+        updatedTrades = trades.map(trade => 
+          trade.id === editingTrade.id ? tradeData : trade
+        );
+      } else {
+        updatedTrades = [tradeData, ...trades];
+      }
+
+      setTrades(updatedTrades);
+      saveTradesToStorage(updatedTrades);
+
+      // Reset form
+      resetForm();
+      showNotification('success', editingTrade ? 'Trade updated successfully' : 'Trade added successfully');
     } catch (error) {
-      console.error('Error exporting to Excel:', error);
-      alert('❌ Failed to export. Please try again.');
-    } finally {
-      setExporting(false);
+      console.error("Error saving trade:", error);
+      showNotification('error', 'Failed to save trade');
     }
   };
 
-  const exportSingleReport = (report) => {
-    const data = report.report_data || {};
+  // Reset form
+  const resetForm = () => {
+    setFormData({
+      symbol: "",
+      tradeType: "BUY",
+      entryPrice: "",
+      exitPrice: "",
+      quantity: "",
+      entryDate: new Date().toISOString().split('T')[0],
+      exitDate: "",
+      stopLoss: "",
+      target: "",
+      notes: "",
+      status: "OPEN",
+      tags: [],
+      emotion: "neutral",
+      confidence: 5,
+      strategy: "",
+      broker: "",
+      commission: "",
+      fees: "",
+      slippage: "",
+      screenshot: "",
+      riskAmount: "",
+      riskPercent: "",
+      rewardRiskRatio: "",
+      marketCondition: "normal",
+      timeOfDay: "",
+      mistakes: [],
+      lessons: "",
+      setup: "",
+      exitReason: "",
+      improvementAreas: [],
+      rating: 0,
+      hidden: false,
+      pinned: false,
+    });
+    setEditingTrade(null);
+    setShowForm(false);
+    setErrors({});
+  };
+
+  // Edit trade
+  const editTrade = (trade) => {
+    setFormData({
+      ...trade,
+      tags: Array.isArray(trade.tags) ? trade.tags : [],
+    });
+    setEditingTrade(trade);
+    setShowForm(true);
+  };
+
+  // Delete trade
+  const deleteTrade = (tradeId) => {
+    if (!confirm("Are you sure you want to delete this trade? This action cannot be undone.")) return;
+
+    try {
+      const updatedTrades = trades.filter(trade => trade.id !== tradeId);
+      setTrades(updatedTrades);
+      saveTradesToStorage(updatedTrades);
+      showNotification('success', 'Trade deleted successfully');
+    } catch (error) {
+      console.error("Error deleting trade:", error);
+      showNotification('error', 'Failed to delete trade');
+    }
+  };
+
+  // Toggle trade selection
+  const toggleTradeSelection = (tradeId) => {
+    const newSelected = new Set(selectedTrades);
+    if (newSelected.has(tradeId)) {
+      newSelected.delete(tradeId);
+    } else {
+      newSelected.add(tradeId);
+    }
+    setSelectedTrades(newSelected);
+  };
+
+  // Bulk actions
+  const bulkDelete = () => {
+    if (selectedTrades.size === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedTrades.size} trades?`)) return;
+
+    const updatedTrades = trades.filter(trade => !selectedTrades.has(trade.id));
+    setTrades(updatedTrades);
+    saveTradesToStorage(updatedTrades);
+    setSelectedTrades(new Set());
+    showNotification('success', `${selectedTrades.size} trades deleted successfully`);
+  };
+
+  const bulkUpdateStatus = (status) => {
+    if (selectedTrades.size === 0) return;
+
+    const updatedTrades = trades.map(trade => 
+      selectedTrades.has(trade.id) ? { ...trade, status, updatedAt: new Date().toISOString() } : trade
+    );
+    setTrades(updatedTrades);
+    saveTradesToStorage(updatedTrades);
+    showNotification('success', `${selectedTrades.size} trades updated to ${status}`);
+  };
+
+  // Export trades
+  const exportTrades = () => {
+    const data = filteredTrades.length > 0 ? filteredTrades : trades;
     
-    const excelData = [
-      ["TRADE REPORT DETAILS"],
-      ["Report ID:", report.id],
-      ["Date:", new Date(report.created_at).toLocaleString()],
-      [],
-      ["TRADE INFORMATION"],
-      ["Trade Type:", data.tradeType || "N/A"],
-      ["Entry Price:", `₹${data.entryPrice || 0}`],
-      ["Stop Loss:", `₹${data.stopLoss || 0}`],
-      ["Target Price:", `₹${data.target || 0}`],
-      ["Risk Percentage:", `${data.riskPercent || 0}%`],
-      [],
-      ["POSITION CALCULATION"],
-      ["Account Balance:", `₹${data.accountBalance || 0}`],
-      ["Cash Available:", `₹${data.cashInHand || data.cashLeft || 0}`],
-      ["Position Size:", data.finalQty || 0],
-      ["Capital Used:", `₹${data.capitalUsed || 0}`],
-      ["Cash Left:", `₹${data.cashLeft || 0}`],
-      ["Risk Amount:", `₹${data.actualRisk || 0}`],
-      [],
-      ["CALCULATION DETAILS"],
-      ["Quantity by Risk:", data.qtyByRisk || 0],
-      ["Quantity by Cash:", data.qtyByCash || 0],
-      ["Final Quantity:", data.finalQty || 0],
-    ];
+    if (exportFormat === 'csv') {
+      const headers = ['Symbol', 'Type', 'Entry', 'Exit', 'Quantity', 'P&L', 'Status', 'Entry Date', 'Exit Date', 'Tags'];
+      const csv = [
+        headers.join(','),
+        ...data.map(trade => [
+          trade.symbol,
+          trade.tradeType,
+          trade.entryPrice,
+          trade.exitPrice || '',
+          trade.quantity,
+          calculatePnL(trade),
+          trade.status,
+          trade.entryDate,
+          trade.exitDate || '',
+          (trade.tags || []).join(';')
+        ].map(val => `"${val}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `trading_journal_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+    } else {
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `trading_journal_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+    }
+
+    showNotification('success', `Exported ${data.length} trades`);
+  };
+
+  // Import trades
+  const importTrades = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setImporting(true);
+    const reader = new FileReader();
     
-    // Convert to CSV
-    const csvContent = excelData.map(row => 
-      row.map(cell => {
-        let cellValue = cell;
-        if (cellValue === null || cellValue === undefined) cellValue = "";
-        if (typeof cellValue === "string") {
-          if (cellValue.includes(',') || cellValue.includes('"') || cellValue.includes('\n')) {
-            return `"${cellValue.replace(/"/g, '""')}"`;
-          }
+    reader.onload = (e) => {
+      try {
+        const content = e.target.result;
+        let importedTrades;
+        
+        if (file.name.endsWith('.json')) {
+          importedTrades = JSON.parse(content);
+        } else if (file.name.endsWith('.csv')) {
+          // Parse CSV
+          const lines = content.split('\n');
+          const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+          importedTrades = lines.slice(1)
+            .filter(line => line.trim())
+            .map(line => {
+              const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/^"|"$/g, '').trim());
+              const trade = {};
+              headers.forEach((header, index) => {
+                const key = header.toLowerCase().replace(/\s+/g, '');
+                trade[key] = values[index];
+              });
+              return trade;
+            })
+            .filter(trade => trade.symbol);
         }
-        return cellValue;
-      }).join(',')
-    ).join('\n');
-    
-    // Download
-    const BOM = "\uFEFF";
-    const blob = new Blob([BOM + csvContent], { 
-      type: 'text/csv;charset=utf-8;' 
-    });
-    
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    link.href = url;
-    link.download = `Trade_Report_${report.id}_${new Date(report.created_at).toISOString().split('T')[0]}.csv`;
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+        if (importedTrades && importedTrades.length > 0) {
+          const updatedTrades = [...importedTrades.map(trade => ({
+            ...trade,
+            id: trade.id || `trade_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            createdAt: trade.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            tags: trade.tags ? (Array.isArray(trade.tags) ? trade.tags : trade.tags.split(',').map(t => t.trim())) : [],
+          })), ...trades];
+          
+          setTrades(updatedTrades);
+          saveTradesToStorage(updatedTrades);
+          showNotification('success', `Imported ${importedTrades.length} trades successfully`);
+        }
+      } catch (error) {
+        console.error("Import error:", error);
+        showNotification('error', 'Failed to import trades. Please check file format.');
+      } finally {
+        setImporting(false);
+        event.target.value = ''; // Reset file input
+      }
+    };
+
+    reader.readAsText(file);
   };
 
-  // =====================
-  // FORMATTING HELPERS
-  // =====================
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+  // AI Insights (simulated)
+  const generateAiInsights = async () => {
+    if (trades.length < 3) {
+      showNotification('info', 'Need at least 3 trades to generate insights');
+      return;
+    }
 
-  const getTradeStatus = (report) => {
-    const data = report.report_data;
-    if (!data.target || !data.entryPrice) return "UNKNOWN";
-    
-    const priceDiff = data.target - data.entryPrice;
-    if (priceDiff > 0) return "PROFIT";
-    if (priceDiff < 0) return "LOSS";
-    return "BREAKEVEN";
-  };
+    setLoadingAiInsights(true);
+    try {
+      // Simulate AI insights
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const closedTrades = trades.filter(t => t.status === 'CLOSED');
+      const winningTrades = closedTrades.filter(t => calculatePnL(t) > 0);
+      const losingTrades = closedTrades.filter(t => calculatePnL(t) < 0);
+      
+      // Find best performing symbol
+      const symbolPerformance = {};
+      closedTrades.forEach(trade => {
+        const pnl = calculatePnL(trade);
+        if (!symbolPerformance[trade.symbol]) {
+          symbolPerformance[trade.symbol] = { total: 0, count: 0 };
+        }
+        symbolPerformance[trade.symbol].total += pnl;
+        symbolPerformance[trade.symbol].count++;
+      });
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "PROFIT": return "bg-green-100 text-green-800";
-      case "LOSS": return "bg-red-100 text-red-800";
-      case "BREAKEVEN": return "bg-yellow-100 text-yellow-800";
-      default: return "bg-gray-100 text-gray-800";
+      let bestSymbol = '';
+      let bestPnL = -Infinity;
+      Object.entries(symbolPerformance).forEach(([symbol, data]) => {
+        if (data.total > bestPnL) {
+          bestPnL = data.total;
+          bestSymbol = symbol;
+        }
+      });
+
+      // Calculate average win/loss
+      const avgWin = winningTrades.length > 0 ? 
+        winningTrades.reduce((sum, trade) => sum + calculatePnL(trade), 0) / winningTrades.length : 0;
+      const avgLoss = losingTrades.length > 0 ? 
+        Math.abs(losingTrades.reduce((sum, trade) => sum + calculatePnL(trade), 0) / losingTrades.length) : 0;
+
+      // Generate insights
+      const insights = {
+        bestPerformingSymbol: bestSymbol || 'N/A',
+        worstPerformingSymbol: Object.entries(symbolPerformance).reduce((worst, [symbol, data]) => 
+          data.total < worst.pnl ? { symbol, pnl: data.total } : worst, 
+          { symbol: '', pnl: Infinity }
+        ).symbol || 'N/A',
+        winRate: stats.winRate,
+        profitFactor: stats.profitFactor,
+        avgWin,
+        avgLoss,
+        recommendations: [
+          avgLoss > avgWin * 2 ? 'Consider tightening your stop losses' : 'Good risk management',
+          stats.winRate < 50 ? 'Focus on improving entry timing' : 'Solid win rate',
+          stats.profitFactor < 1.5 ? 'Work on letting winners run' : 'Excellent profit factor',
+        ],
+        bestTimeOfDay: 'Analyze your trade times to find optimal hours',
+        improvementAreas: [
+          'Document your trade setup more consistently',
+          'Review losing trades for patterns',
+          'Consider position sizing adjustments',
+        ],
+        nextSteps: [
+          'Add more trades for better insights',
+          'Review your top 3 winning trades',
+          'Analyze common mistakes',
+        ]
+      };
+
+      setAiInsights(insights);
+      showNotification('success', 'AI insights generated successfully');
+    } catch (error) {
+      console.error("AI insights error:", error);
+      showNotification('error', 'Failed to generate insights');
+    } finally {
+      setLoadingAiInsights(false);
     }
   };
 
-  const getTradeTypeColor = (type) => {
-    return type === "LONG" 
-      ? "bg-blue-100 text-blue-800" 
-      : "bg-purple-100 text-purple-800";
+  // Notification system
+  const showNotification = (type, message) => {
+    const id = Date.now();
+    const notification = { id, type, message };
+    setNotifications(prev => [notification, ...prev.slice(0, 4)]); // Keep last 5
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }, 5000);
   };
 
-  // =====================
-  // RENDER
-  // =====================
-  if (!isLoaded) {
+  // Filter trades
+  useEffect(() => {
+    let filtered = [...trades];
+
+    // Apply filters
+    if (filters.status !== 'all') {
+      filtered = filtered.filter(trade => trade.status === filters.status);
+    }
+    if (filters.tradeType !== 'all') {
+      filtered = filtered.filter(trade => trade.tradeType === filters.tradeType);
+    }
+    if (filters.symbol) {
+      filtered = filtered.filter(trade => 
+        trade.symbol.toLowerCase().includes(filters.symbol.toLowerCase())
+      );
+    }
+    if (filters.winOnly) {
+      filtered = filtered.filter(trade => calculatePnL(trade) > 0);
+    }
+    if (filters.lossOnly) {
+      filtered = filtered.filter(trade => calculatePnL(trade) < 0);
+    }
+    if (filters.tags.length > 0) {
+      filtered = filtered.filter(trade => 
+        filters.tags.every(tag => (trade.tags || []).includes(tag))
+      );
+    }
+    if (searchQuery) {
+      filtered = filtered.filter(trade => 
+        trade.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (trade.notes && trade.notes.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (trade.strategy && trade.strategy.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+    if (!showHiddenTrades) {
+      filtered = filtered.filter(trade => !trade.hidden);
+    }
+
+    // Apply timeframe
+    if (selectedTimeframe !== 'all') {
+      const now = new Date();
+      const cutoff = new Date();
+      
+      switch (selectedTimeframe) {
+        case 'today':
+          cutoff.setHours(0, 0, 0, 0);
+          break;
+        case 'week':
+          cutoff.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          cutoff.setMonth(now.getMonth() - 1);
+          break;
+        case 'year':
+          cutoff.setFullYear(now.getFullYear() - 1);
+          break;
+      }
+      
+      filtered = filtered.filter(trade => 
+        new Date(trade.entryDate) >= cutoff
+      );
+    }
+
+    setFilteredTrades(filtered);
+  }, [trades, filters, searchQuery, showHiddenTrades, selectedTimeframe]);
+
+  // Calculate stats when trades change
+  useEffect(() => {
+    calculateEnhancedStats();
+  }, [trades, calculateEnhancedStats]);
+
+  // Save settings when they change
+  useEffect(() => {
+    saveSettings();
+  }, [currency, performanceGoals]);
+
+  // Load trades on mount
+  useEffect(() => {
+    loadTrades();
+  }, [loadTrades]);
+
+  // Chart colors based on theme
+  const chartColors = theme === 'dark' 
+    ? ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6']
+    : ['#2563EB', '#059669', '#D97706', '#DC2626', '#7C3AED', '#DB2777', '#0D9488'];
+
+  // Sample data for charts when no trades exist
+  const sampleMonthlyData = [
+    { month: 'Jan', pnl: 1500 },
+    { month: 'Feb', pnl: -500 },
+    { month: 'Mar', pnl: 2200 },
+    { month: 'Apr', pnl: 1800 },
+    { month: 'May', pnl: 900 },
+    { month: 'Jun', pnl: 3100 },
+  ];
+
+  const sampleTradeDistribution = [
+    { name: 'Wins', value: 65 },
+    { name: 'Losses', value: 35 },
+  ];
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your premium journal...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center max-w-md p-8 bg-white rounded-2xl shadow-lg">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h2>
-          <p className="text-gray-600 mb-6">Please login to access your premium trading journal.</p>
-          <button
-            onClick={() => openSignIn()}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-          >
-            Login to Continue
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isPremium) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-          <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-white text-3xl">⭐</span>
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-blue-200 dark:border-blue-900 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin mx-auto"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400 animate-pulse" />
+            </div>
           </div>
-          
-          <h2 className="text-3xl font-bold text-gray-900 mb-3">Premium Feature</h2>
-          <p className="text-gray-600 mb-6">
-            Your trading journal is a premium feature. Upgrade to access all your saved reports, analytics, and export capabilities.
+          <p className="mt-6 text-lg font-medium text-gray-700 dark:text-gray-300">
+            Loading Trading Journal
           </p>
-          
-          <div className="space-y-4">
-            <button
-              onClick={() => window.location.href = "/pricing"}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:opacity-90"
-            >
-              Upgrade to Premium
-            </button>
-            <button
-              onClick={() => window.location.href = "/"}
-              className="w-full py-3 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Back to Calculator
-            </button>
-          </div>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            Your data is loading...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between py-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Premium Trading Journal</h1>
-              <p className="text-gray-600 mt-2">Access all your saved trades, analytics, and reports</p>
+    <div className={`min-h-screen transition-colors duration-200 ${
+      theme === 'dark' 
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100'
+        : 'bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 text-gray-900'
+    }`}>
+      {/* Top Navigation */}
+      <nav className={`sticky top-0 z-50 border-b ${
+        theme === 'dark' 
+          ? 'bg-gray-800/90 backdrop-blur-md border-gray-700'
+          : 'bg-white/90 backdrop-blur-md border-gray-200'
+      }`}>
+        <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo and Brand */}
+            <div className="flex items-center space-x-3">
+              <div className={`p-2 rounded-lg ${
+                theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-100'
+              }`}>
+                <TrendingUp className="h-6 w-6 text-blue-500" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Trading Journal Pro
+                </h1>
+                <p className="text-xs opacity-75">Free • Unlimited • No Login Required</p>
+              </div>
             </div>
-            
-            <div className="flex items-center space-x-4 mt-4 md:mt-0">
+
+            {/* Search */}
+            <div className="flex-1 max-w-xl mx-4">
+              <div className="relative">
+                <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                }`} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search trades, symbols, notes..."
+                  className={`w-full pl-10 pr-4 py-2 rounded-lg border ${
+                    theme === 'dark'
+                      ? 'bg-gray-800 border-gray-700 text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500/20'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500'
+                  } focus:outline-none focus:ring-2 transition-all`}
+                />
+              </div>
+            </div>
+
+            {/* Right Actions */}
+            <div className="flex items-center space-x-2">
+              {/* Theme Toggle */}
               <button
-                onClick={loadSavedReports}
-                disabled={loading}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center"
+                onClick={toggleTheme}
+                className={`p-2 rounded-lg transition-all hover:scale-105 ${
+                  theme === 'dark'
+                    ? 'bg-gray-800 hover:bg-gray-700 text-yellow-400'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
+                title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
               >
-                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
+                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
-              
-              {filteredReports.length > 0 && (
+
+              {/* Notifications */}
+              <div className="relative">
                 <button
-                  onClick={exportToExcel}
-                  disabled={exporting}
-                  className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:opacity-90 flex items-center"
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className={`p-2 rounded-lg relative ${
+                    theme === 'dark'
+                      ? 'hover:bg-gray-700'
+                      : 'hover:bg-gray-100'
+                  }`}
                 >
-                  <FileSpreadsheet className="w-4 h-4 mr-2" />
-                  {exporting ? "Exporting..." : "Export All"}
+                  <Bell className="h-5 w-5" />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
+                      {notifications.length}
+                    </span>
+                  )}
                 </button>
+
+                {/* Notifications Dropdown */}
+                {showNotifications && (
+                  <div className={`absolute right-0 mt-2 w-80 rounded-lg shadow-xl z-50 ${
+                    theme === 'dark'
+                      ? 'bg-gray-800 border border-gray-700'
+                      : 'bg-white border border-gray-200'
+                  }`}>
+                    <div className="p-4 border-b border-gray-700">
+                      <h3 className="font-semibold">Notifications</h3>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <p className="p-4 text-center text-sm opacity-75">No notifications</p>
+                      ) : (
+                        notifications.map(notification => (
+                          <div
+                            key={notification.id}
+                            className={`p-4 border-b last:border-b-0 ${
+                              theme === 'dark' ? 'border-gray-700' : 'border-gray-100'
+                            } ${notification.type === 'success' ? 'bg-green-500/10' : 
+                              notification.type === 'error' ? 'bg-red-500/10' : 
+                              'bg-blue-500/10'}`}
+                          >
+                            <div className="flex items-start">
+                              {notification.type === 'success' ? (
+                                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-2" />
+                              ) : notification.type === 'error' ? (
+                                <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-2" />
+                              ) : (
+                                <AlertCircle className="h-5 w-5 text-blue-500 mt-0.5 mr-2" />
+                              )}
+                              <p className="text-sm">{notification.message}</p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Settings */}
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className={`p-2 rounded-lg ${
+                  theme === 'dark'
+                    ? 'hover:bg-gray-500'
+                    : 'hover:bg-gray-100'
+                }`}
+              >
+                <Settings className="h-5 w-5" />
+              </button>
+
+              {/* Help */}
+              <button
+                onClick={() => setShowHelp(!showHelp)}
+                className={`p-2 rounded-lg ${
+                  theme === 'dark'
+                    ? 'hover:bg-gray-500'
+                    : 'hover:bg-gray-100'
+                }`}
+              >
+                <HelpCircle className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Quick Stats Bar */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {/* Overall Score */}
+          <div className={`rounded-xl p-4 border ${
+            theme === 'dark'
+              ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700'
+              : 'bg-gradient-to-br from-white to-gray-50 border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium opacity-75">Overall Score</p>
+                <div className="flex items-baseline mt-1">
+                  <span className="text-3xl font-bold">{stats.overallScore}</span>
+                  <span className="text-sm opacity-75 ml-1">/100</span>
+                </div>
+              </div>
+              <div className={`p-3 rounded-full ${
+                stats.overallScore >= 80 ? 'bg-green-500/20 text-green-400' :
+                stats.overallScore >= 60 ? 'bg-blue-500/20 text-blue-400' :
+                'bg-yellow-500/20 text-yellow-400'
+              }`}>
+                <Award className="h-6 w-6" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full ${
+                    stats.overallScore >= 80 ? 'bg-green-500' :
+                    stats.overallScore >= 60 ? 'bg-blue-500' :
+                    'bg-yellow-500'
+                  }`}
+                  style={{ width: `${stats.overallScore}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-xs mt-1 opacity-75">
+                <span>Based on {trades.length} trades</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Win Rate */}
+          <div className={`rounded-xl p-4 border ${
+            theme === 'dark'
+              ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700'
+              : 'bg-gradient-to-br from-white to-gray-50 border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium opacity-75">Win Rate</p>
+                <div className="flex items-baseline mt-1">
+                  <span className="text-3xl font-bold">{stats.winRate}%</span>
+                </div>
+              </div>
+              <div className={`p-3 rounded-full ${
+                stats.winRate >= 60 ? 'bg-green-500/20 text-green-400' :
+                stats.winRate >= 40 ? 'bg-blue-500/20 text-blue-400' :
+                'bg-red-500/20 text-red-400'
+              }`}>
+                <TargetIcon className="h-6 w-6" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <div className="text-sm opacity-75">
+                {stats.closedTrades} closed trades • {Math.round(stats.closedTrades * stats.winRate / 100)} wins
+              </div>
+            </div>
+          </div>
+
+          {/* Net Profit */}
+          <div className={`rounded-xl p-4 border ${
+            theme === 'dark'
+              ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700'
+              : 'bg-gradient-to-br from-white to-gray-50 border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium opacity-75">Net Profit</p>
+                <div className="flex items-baseline mt-1">
+                  <span className={`text-3xl font-bold ${
+                    stats.netProfit >= 0 ? 'text-green-500' : 'text-red-500'
+                  }`}>
+                    {formatCurrency(stats.netProfit)}
+                  </span>
+                </div>
+              </div>
+              <div className={`p-3 rounded-full ${
+                stats.netProfit >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+              }`}>
+                <TrendingUp className="h-6 w-6" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <div className="text-sm opacity-75">
+                Profit: {formatCurrency(stats.totalProfit)} • Loss: {formatCurrency(stats.totalLoss)}
+              </div>
+            </div>
+          </div>
+
+          {/* Profit Factor */}
+          <div className={`rounded-xl p-4 border ${
+            theme === 'dark'
+              ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700'
+              : 'bg-gradient-to-br from-white to-gray-50 border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium opacity-75">Profit Factor</p>
+                <div className="flex items-baseline mt-1">
+                  <span className="text-3xl font-bold">{stats.profitFactor.toFixed(2)}</span>
+                </div>
+              </div>
+              <div className={`p-3 rounded-full ${
+                stats.profitFactor >= 2 ? 'bg-green-500/20 text-green-400' :
+                stats.profitFactor >= 1.5 ? 'bg-blue-500/20 text-blue-400' :
+                'bg-yellow-500/20 text-yellow-400'
+              }`}>
+                <BarChart3 className="h-6 w-6" />
+              </div>
+            </div>
+            <div className="mt-3">
+              <div className="text-sm opacity-75">
+                {stats.profitFactor >= 2 ? 'Excellent' : 
+                 stats.profitFactor >= 1.5 ? 'Good' : 
+                 stats.profitFactor >= 1 ? 'Break-even' : 'Needs Improvement'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Stats and Charts */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Performance Charts */}
+            {showCharts && (
+              <div className={`rounded-xl border ${
+                theme === 'dark'
+                  ? 'bg-gray-800/50 border-gray-700'
+                  : 'bg-white border-gray-200'
+              }`}>
+                <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Performance Analytics
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowCharts(!showCharts)}
+                      className="p-1 hover:opacity-75"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Monthly Performance */}
+                    <div>
+                      <h4 className="text-sm font-medium mb-3 opacity-75">Monthly P&L</h4>
+                      <div className="h-48">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RechartsBarChart data={stats.monthlyPerformance.length > 0 ? stats.monthlyPerformance.slice(-6) : sampleMonthlyData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#374151' : '#E5E7EB'} />
+                            <XAxis 
+                              dataKey="month" 
+                              stroke={theme === 'dark' ? '#9CA3AF' : '#6B7280'}
+                              fontSize={12}
+                            />
+                            <YAxis 
+                              stroke={theme === 'dark' ? '#9CA3AF' : '#6B7280'}
+                              fontSize={12}
+                              tickFormatter={(value) => formatCurrency(value).replace(/[^\d.-]/g, '')}
+                            />
+                            <Tooltip
+                              formatter={(value) => [formatCurrency(value), 'P&L']}
+                              labelFormatter={(label) => `Month: ${label}`}
+                              contentStyle={{
+                                backgroundColor: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+                                borderColor: theme === 'dark' ? '#374151' : '#E5E7EB',
+                                borderRadius: '0.5rem',
+                              }}
+                            />
+                            <Bar 
+                              dataKey="pnl" 
+                              fill={chartColors[0]}
+                              radius={[4, 4, 0, 0]}
+                            />
+                          </RechartsBarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Win/Loss Distribution */}
+                    <div>
+                      <h4 className="text-sm font-medium mb-3 opacity-75">Trade Distribution</h4>
+                      <div className="h-48">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RechartsPieChart>
+                            <Pie
+                              data={stats.closedTrades > 0 ? [
+                                { name: 'Wins', value: Math.round(stats.closedTrades * stats.winRate / 100) },
+                                { name: 'Losses', value: stats.closedTrades - Math.round(stats.closedTrades * stats.winRate / 100) },
+                              ] : sampleTradeDistribution}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={30}
+                              outerRadius={50}
+                              paddingAngle={5}
+                              dataKey="value"
+                            >
+                              <Cell fill={chartColors[1]} />
+                              <Cell fill={chartColors[3]} />
+                            </Pie>
+                            <Tooltip
+                              formatter={(value) => [value, 'Trades']}
+                              contentStyle={{
+                                backgroundColor: theme === 'dark' ? '#1F2937' : '#FFFFFF',
+                                borderColor: theme === 'dark' ? '#374151' : '#E5E7EB',
+                                borderRadius: '0.5rem',
+                              }}
+                            />
+                            <Legend />
+                          </RechartsPieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Risk Metrics */}
+            {showRiskMetrics && (
+              <div className={`rounded-xl border ${
+                theme === 'dark'
+                  ? 'bg-gray-800/50 border-gray-700'
+                  : 'bg-white border-gray-200'
+              }`}>
+                <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Risk Metrics
+                  </h3>
+                  <button
+                    onClick={() => setShowRiskMetrics(!showRiskMetrics)}
+                    className="p-1 hover:opacity-75"
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="p-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-4 rounded-lg bg-gray-700/30">
+                      <div className="text-2xl font-bold text-blue-400">{stats.maxDrawdown.toFixed(2)}%</div>
+                      <div className="text-sm opacity-75 mt-1">Max Drawdown</div>
+                    </div>
+                    <div className="text-center p-4 rounded-lg bg-gray-700/30">
+                      <div className="text-2xl font-bold text-green-400">{stats.sharpeRatio.toFixed(2)}</div>
+                      <div className="text-sm opacity-75 mt-1">Sharpe Ratio</div>
+                    </div>
+                    <div className="text-center p-4 rounded-lg bg-gray-700/30">
+                      <div className="text-2xl font-bold text-purple-400">{stats.recoveryFactor.toFixed(2)}</div>
+                      <div className="text-sm opacity-75 mt-1">Recovery Factor</div>
+                    </div>
+                    <div className="text-center p-4 rounded-lg bg-gray-700/30">
+                      <div className="text-2xl font-bold text-yellow-400">{stats.avgHoldingPeriod.toFixed(1)} days</div>
+                      <div className="text-sm opacity-75 mt-1">Avg Holding</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Trades Table */}
+            <div className={`rounded-xl border ${
+              theme === 'dark'
+                ? 'bg-gray-800/50 border-gray-700'
+                : 'bg-white border-gray-200'
+            }`}>
+              <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <h3 className="font-semibold">Your Trades</h3>
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+                  }`}>
+                    {filteredTrades.length} trades
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {/* View Toggle */}
+                  <div className={`flex rounded-lg p-1 ${
+                    theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+                  }`}>
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`p-1 rounded ${
+                        viewMode === 'grid' 
+                          ? theme === 'dark' ? 'bg-gray-600' : 'bg-white shadow'
+                          : ''
+                      }`}
+                    >
+                      <Grid className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`p-1 rounded ${
+                        viewMode === 'list' 
+                          ? theme === 'dark' ? 'bg-gray-600' : 'bg-white shadow'
+                          : ''
+                      }`}
+                    >
+                      <List className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Filters */}
+                  <button
+                    onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                    className={`p-2 rounded-lg ${
+                      theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+                    }`}
+                  >
+                    <Filter className="h-4 w-4" />
+                  </button>
+
+                  {/* Add Trade */}
+                  <button
+                    onClick={() => setShowForm(true)}
+                    className={`p-2 rounded-lg flex items-center gap-2 ${
+                      theme === 'dark'
+                        ? 'bg-blue-600 hover:bg-blue-700'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">Add Trade</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Advanced Filters */}
+              {showAdvancedFilters && (
+                <div className={`p-4 border-b ${
+                  theme === 'dark' ? 'border-gray-700 bg-gray-800/30' : 'border-gray-200 bg-gray-50'
+                }`}>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <select
+                      value={filters.status}
+                      onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                      className={`px-3 py-2 rounded-lg border ${
+                        theme === 'dark'
+                          ? 'bg-gray-800 border-gray-700 text-gray-100'
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    >
+                      <option value="all">All Status</option>
+                      <option value="OPEN">Open</option>
+                      <option value="CLOSED">Closed</option>
+                    </select>
+
+                    <select
+                      value={filters.tradeType}
+                      onChange={(e) => setFilters({ ...filters, tradeType: e.target.value })}
+                      className={`px-3 py-2 rounded-lg border ${
+                        theme === 'dark'
+                          ? 'bg-gray-800 border-gray-700 text-gray-100'
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    >
+                      <option value="all">All Types</option>
+                      <option value="BUY">Buy</option>
+                      <option value="SELL">Sell</option>
+                    </select>
+
+                    <select
+                      value={selectedTimeframe}
+                      onChange={(e) => setSelectedTimeframe(e.target.value)}
+                      className={`px-3 py-2 rounded-lg border ${
+                        theme === 'dark'
+                          ? 'bg-gray-800 border-gray-700 text-gray-100'
+                          : 'bg-white border-gray-300 text-gray-900'
+                      }`}
+                    >
+                      <option value="all">All Time</option>
+                      <option value="today">Today</option>
+                      <option value="week">This Week</option>
+                      <option value="month">This Month</option>
+                      <option value="year">This Year</option>
+                    </select>
+
+                    <button
+                      onClick={() => {
+                        setFilters({
+                          status: 'all',
+                          tradeType: 'all',
+                          dateRange: 'all',
+                          symbol: '',
+                          minProfit: '',
+                          maxProfit: '',
+                          winOnly: false,
+                          lossOnly: false,
+                          tags: [],
+                          riskLevel: 'all',
+                          holdingPeriod: 'all',
+                        });
+                        setSelectedTimeframe('all');
+                        setSearchQuery('');
+                      }}
+                      className={`px-3 py-2 rounded-lg border ${
+                        theme === 'dark'
+                          ? 'bg-gray-700 hover:bg-gray-600 border-gray-600'
+                          : 'bg-gray-100 hover:bg-gray-200 border-gray-300'
+                      }`}
+                    >
+                      Clear Filters
+                    </button>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-4">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={filters.winOnly}
+                        onChange={(e) => setFilters({ ...filters, winOnly: e.target.checked, lossOnly: false })}
+                        className="rounded"
+                      />
+                      <span className="text-sm">Winning Trades Only</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={filters.lossOnly}
+                        onChange={(e) => setFilters({ ...filters, lossOnly: e.target.checked, winOnly: false })}
+                        className="rounded"
+                      />
+                      <span className="text-sm">Losing Trades Only</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* Bulk Actions */}
+              {selectedTrades.size > 0 && (
+                <div className={`p-4 border-b ${
+                  theme === 'dark' ? 'border-gray-700 bg-blue-900/20' : 'border-gray-200 bg-blue-50'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`px-3 py-1 rounded-full ${
+                        theme === 'dark' ? 'bg-blue-500/30' : 'bg-blue-100'
+                      }`}>
+                        <span className="text-sm font-medium">{selectedTrades.size} selected</span>
+                      </div>
+                      <button
+                        onClick={() => setSelectedTrades(new Set())}
+                        className="text-sm opacity-75 hover:opacity-100"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => bulkUpdateStatus('OPEN')}
+                        className={`px-3 py-1 rounded text-sm ${
+                          theme === 'dark'
+                            ? 'bg-blue-600 hover:bg-blue-700'
+                            : 'bg-blue-500 hover:bg-blue-600 text-white'
+                        }`}
+                      >
+                        Mark Open
+                      </button>
+                      <button
+                        onClick={() => bulkUpdateStatus('CLOSED')}
+                        className={`px-3 py-1 rounded text-sm ${
+                          theme === 'dark'
+                            ? 'bg-green-600 hover:bg-green-700'
+                            : 'bg-green-500 hover:bg-green-600 text-white'
+                        }`}
+                      >
+                        Mark Closed
+                      </button>
+                      <button
+                        onClick={bulkDelete}
+                        className={`px-3 py-1 rounded text-sm ${
+                          theme === 'dark'
+                            ? 'bg-red-600 hover:bg-red-700'
+                            : 'bg-red-500 hover:bg-red-600 text-white'
+                        }`}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Trades Grid/List */}
+              <div className="p-4">
+                {filteredTrades.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className={`inline-flex p-4 rounded-full ${
+                      theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+                    }`}>
+                      <AlertCircle className="h-12 w-12 opacity-50" />
+                    </div>
+                    <h3 className="text-lg font-medium mt-4 mb-2">No trades found</h3>
+                    <p className="opacity-75 mb-6">Try adjusting your filters or add a new trade</p>
+                    <button
+                      onClick={() => setShowForm(true)}
+                      className={`px-4 py-2 rounded-lg ${
+                        theme === 'dark'
+                          ? 'bg-blue-600 hover:bg-blue-700'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                    >
+                      Add Your First Trade
+                    </button>
+                  </div>
+                ) : viewMode === 'grid' ? (
+                  // Grid View
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredTrades.slice(0, 12).map((trade) => {
+                      const pnl = calculatePnL(trade);
+                      const rrRatio = calculateRiskRewardRatio(trade);
+                      
+                      return (
+                        <div
+                          key={trade.id}
+                          className={`rounded-lg border p-4 cursor-pointer transition-all hover:scale-[1.02] ${
+                            selectedTrades.has(trade.id)
+                              ? theme === 'dark'
+                                ? 'border-blue-500 bg-blue-900/20'
+                                : 'border-blue-500 bg-blue-50'
+                              : theme === 'dark'
+                                ? 'border-gray-700 bg-gray-800/30 hover:border-gray-600'
+                                : 'border-gray-200 bg-white hover:border-gray-300'
+                          }`}
+                          onClick={() => toggleTradeSelection(trade.id)}
+                        >
+                          {/* Trade Header */}
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg font-bold">{trade.symbol}</span>
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  trade.tradeType === 'BUY'
+                                    ? 'bg-green-500/20 text-green-400'
+                                    : 'bg-red-500/20 text-red-400'
+                                }`}>
+                                  {trade.tradeType}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className={`px-2 py-0.5 rounded-full text-xs ${
+                                  trade.status === 'CLOSED'
+                                    ? 'bg-blue-500/20 text-blue-400'
+                                    : 'bg-yellow-500/20 text-yellow-400'
+                                }`}>
+                                  {trade.status}
+                                </span>
+                                {trade.pinned && (
+                                  <span className="px-2 py-0.5 rounded-full text-xs bg-purple-500/20 text-purple-400">
+                                    Pinned
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className={`text-lg font-bold ${
+                                pnl >= 0 ? 'text-green-500' : 'text-red-500'
+                              }`}>
+                                {pnl >= 0 ? '+' : ''}{formatCurrency(pnl)}
+                              </div>
+                              {trade.status === 'CLOSED' && trade.entryPrice && trade.quantity && (
+                                <div className="text-xs opacity-75">
+                                  {((pnl / (parseFloat(trade.entryPrice) * parseFloat(trade.quantity))) * 100).toFixed(2)}%
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Trade Details */}
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="opacity-75">Entry</span>
+                              <span className="font-medium">{formatCurrency(parseFloat(trade.entryPrice) || 0)}</span>
+                            </div>
+                            {trade.exitPrice && (
+                              <div className="flex justify-between">
+                                <span className="opacity-75">Exit</span>
+                                <span className="font-medium">{formatCurrency(parseFloat(trade.exitPrice))}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between">
+                              <span className="opacity-75">Quantity</span>
+                              <span className="font-medium">{trade.quantity}</span>
+                            </div>
+                            {trade.stopLoss && (
+                              <div className="flex justify-between">
+                                <span className="opacity-75">Stop Loss</span>
+                                <span className="font-medium">{formatCurrency(parseFloat(trade.stopLoss))}</span>
+                              </div>
+                            )}
+                            {rrRatio > 0 && (
+                              <div className="flex justify-between">
+                                <span className="opacity-75">R:R Ratio</span>
+                                <span className="font-medium">{rrRatio.toFixed(2)}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Tags */}
+                          {trade.tags && trade.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-3">
+                              {trade.tags.slice(0, 3).map((tag, index) => (
+                                <span
+                                  key={index}
+                                  className="px-2 py-0.5 rounded-full text-xs bg-gray-700/50"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                              {trade.tags.length > 3 && (
+                                <span className="px-2 py-0.5 rounded-full text-xs bg-gray-700/50">
+                                  +{trade.tags.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Notes Preview */}
+                          {trade.notes && (
+                            <div className="mt-3 pt-3 border-t border-gray-700">
+                              <p className="text-sm opacity-75 truncate">{trade.notes.substring(0, 60)}...</p>
+                            </div>
+                          )}
+
+                          {/* Actions */}
+                          <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-700">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                editTrade(trade);
+                              }}
+                              className="p-1 hover:opacity-75"
+                              title="Edit trade"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteTrade(trade.id);
+                              }}
+                              className="p-1 hover:opacity-75 text-red-400"
+                              title="Delete trade"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  // Table View
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-700">
+                      <thead>
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                            <input
+                              type="checkbox"
+                              checked={selectedTrades.size === filteredTrades.length && filteredTrades.length > 0}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedTrades(new Set(filteredTrades.map(t => t.id)));
+                                } else {
+                                  setSelectedTrades(new Set());
+                                }
+                              }}
+                              className="rounded"
+                            />
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                            Symbol
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                            Type
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                            Entry
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                            Exit
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                            P&L
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-700">
+                        {filteredTrades.slice(0, 20).map((trade) => {
+                          const pnl = calculatePnL(trade);
+                          return (
+                            <tr key={trade.id} className="hover:bg-gray-700/30">
+                              <td className="px-4 py-3">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedTrades.has(trade.id)}
+                                  onChange={() => toggleTradeSelection(trade.id)}
+                                  className="rounded"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="font-medium">{trade.symbol}</div>
+                                <div className="text-xs opacity-75">{trade.entryDate}</div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  trade.tradeType === 'BUY'
+                                    ? 'bg-green-500/20 text-green-400'
+                                    : 'bg-red-500/20 text-red-400'
+                                }`}>
+                                  {trade.tradeType}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="font-medium">{formatCurrency(parseFloat(trade.entryPrice) || 0)}</div>
+                                <div className="text-xs opacity-75">Qty: {trade.quantity}</div>
+                              </td>
+                              <td className="px-4 py-3">
+                                {trade.exitPrice ? (
+                                  <>
+                                    <div className="font-medium">{formatCurrency(parseFloat(trade.exitPrice))}</div>
+                                    <div className="text-xs opacity-75">{trade.exitDate}</div>
+                                  </>
+                                ) : (
+                                  <span className="text-xs opacity-75">-</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className={`font-bold ${
+                                  pnl >= 0 ? 'text-green-500' : 'text-red-500'
+                                }`}>
+                                  {pnl >= 0 ? '+' : ''}{formatCurrency(pnl)}
+                                </div>
+                                {trade.status === 'CLOSED' && trade.entryPrice && trade.quantity && (
+                                  <div className="text-xs opacity-75">
+                                    {((pnl / (parseFloat(trade.entryPrice) * parseFloat(trade.quantity))) * 100).toFixed(2)}%
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`px-2 py-1 rounded-full text-xs ${
+                                  trade.status === 'CLOSED'
+                                    ? 'bg-blue-500/20 text-blue-400'
+                                    : 'bg-yellow-500/20 text-yellow-400'
+                                }`}>
+                                  {trade.status}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => editTrade(trade)}
+                                    className="p-1 hover:opacity-75"
+                                    title="Edit trade"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => deleteTrade(trade.id)}
+                                    className="p-1 hover:opacity-75 text-red-400"
+                                    title="Delete trade"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Pagination */}
+              {filteredTrades.length > 20 && (
+                <div className={`p-4 border-t ${
+                  theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm opacity-75">
+                      Showing 1-20 of {filteredTrades.length} trades
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button className={`px-3 py-1 rounded ${
+                        theme === 'dark'
+                          ? 'bg-gray-700 hover:bg-gray-600'
+                          : 'bg-gray-100 hover:bg-gray-200'
+                      }`}>
+                        Previous
+                      </button>
+                      <button className={`px-3 py-1 rounded ${
+                        theme === 'dark'
+                          ? 'bg-gray-700 hover:bg-gray-600'
+                          : 'bg-gray-100 hover:bg-gray-200'
+                      }`}>
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Stats Overview */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl">
-            <p className="text-sm text-blue-600 font-medium">Total Reports</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.totalReports}</p>
-          </div>
-          
-          <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl">
-            <p className="text-sm text-green-600 font-medium">Total Profit</p>
-            <p className="text-2xl font-bold text-gray-900">₹{stats.totalProfit.toLocaleString()}</p>
-          </div>
-          
-          <div className="bg-gradient-to-r from-red-50 to-red-100 p-4 rounded-xl">
-            <p className="text-sm text-red-600 font-medium">Total Loss</p>
-            <p className="text-2xl font-bold text-gray-900">₹{stats.totalLoss.toLocaleString()}</p>
-          </div>
-          
-          <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-xl">
-            <p className="text-sm text-purple-600 font-medium">Win Rate</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.winRate.toFixed(1)}%</p>
-          </div>
-          
-          <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-4 rounded-xl">
-            <p className="text-sm text-orange-600 font-medium">Avg Risk</p>
-            <p className="text-2xl font-bold text-gray-900">₹{stats.avgRisk.toLocaleString()}</p>
-          </div>
-          
-          <div className="bg-gradient-to-r from-cyan-50 to-cyan-100 p-4 rounded-xl">
-            <p className="text-sm text-cyan-600 font-medium">Total Trades</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.totalTrades}</p>
-          </div>
-        </div>
-      </div>
+          {/* Right Column - Insights and Actions */}
+          <div className="space-y-8">
+            {/* AI Insights */}
+            {showPerformanceInsights && (
+              <div className={`rounded-xl border ${
+                theme === 'dark'
+                  ? 'bg-gradient-to-b from-gray-800 to-gray-900 border-gray-700'
+                  : 'bg-gradient-to-b from-white to-gray-50 border-gray-200'
+              }`}>
+                <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-purple-500" />
+                    AI Insights
+                  </h3>
+                  <button
+                    onClick={() => setShowPerformanceInsights(!showPerformanceInsights)}
+                    className="p-1 hover:opacity-75"
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="p-4">
+                  {loadingAiInsights ? (
+                    <div className="text-center py-8">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                      <p className="mt-3 text-sm opacity-75">Analyzing your trades...</p>
+                    </div>
+                  ) : aiInsights ? (
+                    <div className="space-y-4">
+                      <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                        <div className="text-sm font-medium text-purple-400">Best Performing</div>
+                        <div className="text-lg font-bold mt-1">{aiInsights.bestPerformingSymbol}</div>
+                      </div>
+                      <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                        <div className="text-sm font-medium text-blue-400">Win Rate</div>
+                        <div className="text-2xl font-bold mt-1">{aiInsights.winRate.toFixed(1)}%</div>
+                      </div>
+                      <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                        <div className="text-sm font-medium text-yellow-400">Recommendations</div>
+                        <ul className="mt-2 space-y-1">
+                          {aiInsights.recommendations.map((rec, index) => (
+                            <li key={index} className="text-sm flex items-start gap-2">
+                              <span className="mt-1">•</span>
+                              <span>{rec}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-6">
+                      <div className={`inline-flex p-3 rounded-full ${
+                        theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+                      }`}>
+                        <Brain className="h-8 w-8 opacity-50" />
+                      </div>
+                      <p className="mt-3 text-sm opacity-75">Generate AI-powered insights based on your trading data</p>
+                      <button
+                        onClick={generateAiInsights}
+                        disabled={trades.length < 3}
+                        className={`mt-4 px-4 py-2 rounded-lg flex items-center gap-2 mx-auto ${
+                          trades.length < 3
+                            ? 'opacity-50 cursor-not-allowed'
+                            : theme === 'dark'
+                              ? 'bg-purple-600 hover:bg-purple-700'
+                              : 'bg-purple-500 hover:bg-purple-600 text-white'
+                        }`}
+                      >
+                        <Zap className="h-4 w-4" />
+                        Generate Insights
+                      </button>
+                      {trades.length < 3 && (
+                        <p className="text-xs opacity-75 mt-2">Need at least 3 trades</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left Column - Filters & Report List */}
-          <div className="lg:w-2/3">
-            {/* Filters */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Filter className="w-5 h-5 mr-2" />
-                  Filters & Search
-                </h3>
+            {/* Quick Actions */}
+            <div className={`rounded-xl border ${
+              theme === 'dark'
+                ? 'bg-gray-800/50 border-gray-700'
+                : 'bg-white border-gray-200'
+            }`}>
+              <div className="p-4 border-b border-gray-700">
+                <h3 className="font-semibold">Quick Actions</h3>
+              </div>
+              <div className="p-4 space-y-3">
+                <button
+                  onClick={() => setShowForm(true)}
+                  className={`w-full px-4 py-3 rounded-lg flex items-center justify-between group transition-all ${
+                    theme === 'dark'
+                      ? 'bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30'
+                      : 'bg-blue-50 hover:bg-blue-100 border border-blue-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      theme === 'dark' ? 'bg-blue-500/30' : 'bg-blue-100'
+                    }`}>
+                      <Plus className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium">Add Trade</div>
+                      <div className="text-sm opacity-75">Quick entry form</div>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 opacity-50 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                <button
+                  onClick={exportTrades}
+                  className={`w-full px-4 py-3 rounded-lg flex items-center justify-between group transition-all ${
+                    theme === 'dark'
+                      ? 'bg-green-600/20 hover:bg-green-600/30 border border-green-500/30'
+                      : 'bg-green-50 hover:bg-green-100 border border-green-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      theme === 'dark' ? 'bg-green-500/30' : 'bg-green-100'
+                    }`}>
+                      <Download className="h-5 w-5 text-green-500" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium">Export Trades</div>
+                      <div className="text-sm opacity-75">{exportFormat.toUpperCase()} format</div>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 opacity-50 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                <label className={`w-full px-4 py-3 rounded-lg flex items-center justify-between group transition-all cursor-pointer ${
+                  theme === 'dark'
+                    ? 'bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30'
+                    : 'bg-purple-50 hover:bg-purple-100 border border-purple-200'
+                }`}>
+                  <input
+                    type="file"
+                    accept=".json,.csv"
+                    onChange={importTrades}
+                    className="hidden"
+                    disabled={importing}
+                  />
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      theme === 'dark' ? 'bg-purple-500/30' : 'bg-purple-100'
+                    }`}>
+                      <Upload className="h-5 w-5 text-purple-500" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium">
+                        {importing ? 'Importing...' : 'Import Trades'}
+                      </div>
+                      <div className="text-sm opacity-75">JSON or CSV</div>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 opacity-50 group-hover:translate-x-1 transition-transform" />
+                </label>
+
                 <button
                   onClick={() => {
-                    setSearchTerm("");
-                    setDateRange({ startDate: "", endDate: "" });
-                    setTradeTypeFilter("ALL");
-                    setProfitFilter("ALL");
-                    setSortBy("newest");
+                    localStorage.removeItem('trading-journal-pro-trades');
+                    setTrades([]);
+                    showNotification('success', 'All trades cleared');
                   }}
-                  className="text-sm text-blue-600 hover:text-blue-700"
+                  className={`w-full px-4 py-3 rounded-lg flex items-center justify-between group transition-all ${
+                    theme === 'dark'
+                      ? 'bg-red-600/20 hover:bg-red-600/30 border border-red-500/30'
+                      : 'bg-red-50 hover:bg-red-100 border border-red-200'
+                  }`}
                 >
-                  Clear All
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      theme === 'dark' ? 'bg-red-500/30' : 'bg-red-100'
+                    }`}>
+                      <Trash2 className="h-5 w-5 text-red-500" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium">Clear All Trades</div>
+                      <div className="text-sm opacity-75">Start fresh</div>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 opacity-50 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
-              
-              <div className="space-y-4">
-                {/* Search */}
+            </div>
+
+            {/* Goals Progress */}
+            <div className={`rounded-xl border ${
+              theme === 'dark'
+                ? 'bg-gray-800/50 border-gray-700'
+                : 'bg-white border-gray-200'
+            }`}>
+              <div className="p-4 border-b border-gray-700">
+                <h3 className="font-semibold">Monthly Goals</h3>
+              </div>
+              <div className="p-4 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Search Reports
-                  </label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Search by trade type, entry price, date..."
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Profit Target</span>
+                    <span>{formatCurrency(stats.netProfit)} / {formatCurrency(performanceGoals.monthlyProfitTarget)}</span>
+                  </div>
+                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-green-500"
+                      style={{ width: `${Math.min(100, (stats.netProfit / performanceGoals.monthlyProfitTarget) * 100)}%` }}
                     />
                   </div>
                 </div>
-                
-                {/* Date Range */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      From Date
-                    </label>
-                    <input
-                      type="date"
-                      value={dateRange.startDate}
-                      onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                    />
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Win Rate Target</span>
+                    <span>{stats.winRate.toFixed(1)}% / {performanceGoals.winRateTarget}%</span>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      To Date
-                    </label>
-                    <input
-                      type="date"
-                      value={dateRange.endDate}
-                      onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-500"
+                      style={{ width: `${Math.min(100, (stats.winRate / performanceGoals.winRateTarget) * 100)}%` }}
                     />
                   </div>
                 </div>
-                
-                {/* Quick Filters */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Trade Type
-                    </label>
-                    <select
-                      value={tradeTypeFilter}
-                      onChange={(e) => setTradeTypeFilter(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                    >
-                      <option value="ALL">All Types</option>
-                      <option value="LONG">Long Only</option>
-                      <option value="SHORT">Short Only</option>
-                    </select>
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Trades This Month</span>
+                    <span>{stats.closedTrades} / {performanceGoals.tradesPerMonth}</span>
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Profit/Loss
-                    </label>
-                    <select
-                      value={profitFilter}
-                      onChange={(e) => setProfitFilter(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                    >
-                      <option value="ALL">All Trades</option>
-                      <option value="PROFIT">Profit Only</option>
-                      <option value="LOSS">Loss Only</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Sort By
-                    </label>
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                    >
-                      <option value="newest">Newest First</option>
-                      <option value="oldest">Oldest First</option>
-                      <option value="profit_high">Highest Profit</option>
-                      <option value="profit_low">Lowest Profit</option>
-                      <option value="risk_high">Highest Risk</option>
-                      <option value="risk_low">Lowest Risk</option>
-                    </select>
+                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-purple-500"
+                      style={{ width: `${Math.min(100, (stats.closedTrades / performanceGoals.tradesPerMonth) * 100)}%` }}
+                    />
                   </div>
                 </div>
               </div>
             </div>
-            
-            {/* Reports List */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Saved Reports ({filteredReports.length})
-                </h3>
-                <span className="text-sm text-gray-500">
-                  {loading ? "Loading..." : `${filteredReports.length} of ${savedReports.length} reports`}
-                </span>
+
+            {/* Recent Activity */}
+            <div className={`rounded-xl border ${
+              theme === 'dark'
+                ? 'bg-gray-800/50 border-gray-700'
+                : 'bg-white border-gray-200'
+            }`}>
+              <div className="p-4 border-b border-gray-700">
+                <h3 className="font-semibold">Recent Activity</h3>
               </div>
-              
-              {loading ? (
-                <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-4 text-gray-600">Loading your premium journal...</p>
-                </div>
-              ) : filteredReports.length > 0 ? (
+              <div className="p-4">
                 <div className="space-y-4">
-                  {filteredReports.map((report) => {
-                    const data = report.report_data || {};
-                    const status = getTradeStatus(report);
-                    const expectedProfit = data.target && data.entryPrice && data.finalQty 
-                      ? (data.target - data.entryPrice) * data.finalQty
-                      : 0;
-                    
+                  {trades.slice(0, 5).map((trade, index) => {
+                    const pnl = calculatePnL(trade);
                     return (
-                      <div
-                        key={report.id}
-                        className={`border rounded-xl p-4 hover:border-blue-300 transition-colors ${
-                          selectedReport?.id === report.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-                        }`}
-                      >
-                        <div className="flex flex-col md:flex-row md:items-center justify-between">
-                          {/* Left side */}
-                          <div className="mb-4 md:mb-0 md:flex-1">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <span className={`px-2 py-1 text-xs rounded-full font-medium ${getTradeTypeColor(data.tradeType)}`}>
-                                {data.tradeType || "N/A"}
-                              </span>
-                              <span className={`px-2 py-1 text-xs rounded-full font-medium ${getStatusColor(status)}`}>
-                                {status}
-                              </span>
-                              <span className="text-sm text-gray-500">
-                                {formatDate(report.created_at)}
-                              </span>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                              <div>
-                                <p className="text-gray-500">Entry</p>
-                                <p className="font-semibold">₹{data.entryPrice || 0}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-500">Target</p>
-                                <p className="font-semibold text-green-600">₹{data.target || 0}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-500">Quantity</p>
-                                <p className="font-semibold">{data.finalQty || 0}</p>
-                              </div>
-                              <div>
-                                <p className="text-gray-500">Expected P&L</p>
-                                <p className={`font-semibold ${
-                                  expectedProfit > 0 ? 'text-green-600' : 
-                                  expectedProfit < 0 ? 'text-red-600' : 'text-gray-600'
-                                }`}>
-                                  ₹{Math.abs(expectedProfit).toLocaleString()}
-                                </p>
-                              </div>
-                            </div>
+                      <div key={trade.id} className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${
+                          trade.status === 'CLOSED'
+                            ? pnl >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'
+                            : 'bg-blue-500/20'
+                        }`}>
+                          {trade.status === 'CLOSED' ? (
+                            pnl >= 0 ? (
+                              <TrendingUp className="h-4 w-4 text-green-400" />
+                            ) : (
+                              <TrendingDown className="h-4 w-4 text-red-400" />
+                            )
+                          ) : (
+                            <Clock className="h-4 w-4 text-blue-400" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium">{trade.symbol}</div>
+                          <div className="text-sm opacity-75">
+                            {trade.tradeType} • {trade.quantity} shares
                           </div>
-                          
-                          {/* Right side - Actions */}
-                          <div className="flex items-center space-x-2">
-                            <button
-                              onClick={() => handleViewReport(report)}
-                              className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 flex items-center text-sm"
-                            >
-                              <Eye className="w-4 h-4 mr-1" />
-                              View
-                            </button>
-                            <button
-                              onClick={() => exportSingleReport(report)}
-                              className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 flex items-center text-sm"
-                            >
-                              <Download className="w-4 h-4 mr-1" />
-                              Export
-                            </button>
-                            <button
-                              onClick={() => handleDeleteReport(report)}
-                              className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center text-sm"
-                            >
-                              <Trash2 className="w-4 h-4 mr-1" />
-                            </button>
-                          </div>
+                        </div>
+                        <div className={`text-sm font-medium ${
+                          trade.status === 'CLOSED' ? (pnl >= 0 ? 'text-green-400' : 'text-red-400') : 'text-blue-400'
+                        }`}>
+                          {trade.status === 'CLOSED' ? (
+                            <>
+                              {pnl >= 0 ? '+' : ''}{formatCurrency(pnl)}
+                            </>
+                          ) : (
+                            'Open'
+                          )}
                         </div>
                       </div>
                     );
                   })}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <BarChart3 className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">No Reports Found</h4>
-                  <p className="text-gray-500 mb-6">
-                    {savedReports.length === 0 
-                      ? "You haven't saved any trading reports yet. Start by calculating a position and saving it to your journal."
-                      : "No reports match your current filters. Try adjusting your search criteria."}
-                  </p>
-                  {savedReports.length === 0 && (
-                    <button
-                      onClick={() => window.location.href = "/"}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                      Go to Calculator
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Right Column - Report Details */}
-          <div className="lg:w-1/3">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sticky top-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">Report Details</h3>
-              
-              {selectedReport ? (
-                <div className="space-y-6">
-                  {/* Report Header */}
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-2">
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getTradeTypeColor(selectedReport.report_data?.tradeType)}`}>
-                          {selectedReport.report_data?.tradeType || "N/A"}
-                        </span>
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(getTradeStatus(selectedReport))}`}>
-                          {getTradeStatus(selectedReport)}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => exportSingleReport(selectedReport)}
-                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm"
-                      >
-                        Export
-                      </button>
-                    </div>
-                    
-                    <p className="text-sm text-gray-500">
-                      Saved on {formatDate(selectedReport.created_at)}
-                    </p>
-                  </div>
-                  
-                  {/* Trade Details */}
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-gray-900">Trade Information</h4>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-sm text-gray-500">Entry Price</p>
-                        <p className="text-lg font-semibold">₹{selectedReport.report_data?.entryPrice || 0}</p>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-sm text-gray-500">Stop Loss</p>
-                        <p className="text-lg font-semibold text-red-600">₹{selectedReport.report_data?.stopLoss || 0}</p>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-sm text-gray-500">Target Price</p>
-                        <p className="text-lg font-semibold text-green-600">₹{selectedReport.report_data?.target || 0}</p>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-sm text-gray-500">Risk %</p>
-                        <p className="text-lg font-semibold">{selectedReport.report_data?.riskPercent || 0}%</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Position Details */}
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-gray-900">Position Calculation</h4>
-                    
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Account Balance</span>
-                        <span className="font-semibold">₹{selectedReport.report_data?.accountBalance?.toLocaleString() || 0}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Position Size</span>
-                        <span className="font-semibold">{selectedReport.report_data?.finalQty || 0} units</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Capital Used</span>
-                        <span className="font-semibold">₹{selectedReport.report_data?.capitalUsed?.toLocaleString() || 0}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Cash Left</span>
-                        <span className="font-semibold">₹{selectedReport.report_data?.cashLeft?.toLocaleString() || 0}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Risk Amount</span>
-                        <span className="font-semibold text-orange-600">₹{selectedReport.report_data?.actualRisk?.toLocaleString() || 0}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Expected Outcome */}
-                  {selectedReport.report_data?.target && selectedReport.report_data?.entryPrice && (
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl">
-                      <h4 className="font-medium text-gray-900 mb-2">Expected Outcome</h4>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-600">If target is hit:</p>
-                          <p className="text-2xl font-bold text-green-600">
-                            ₹{((selectedReport.report_data.target - selectedReport.report_data.entryPrice) * (selectedReport.report_data.finalQty || 0)).toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm text-gray-600">Return</p>
-                          <p className="text-lg font-semibold">
-                            {selectedReport.report_data.target && selectedReport.report_data.entryPrice
-                              ? (((selectedReport.report_data.target - selectedReport.report_data.entryPrice) / selectedReport.report_data.entryPrice) * 100).toFixed(2)
-                              : "0.00"}%
-                          </p>
-                        </div>
-                      </div>
+                  {trades.length === 0 && (
+                    <div className="text-center py-4">
+                      <p className="text-sm opacity-75">No recent trades</p>
                     </div>
                   )}
-                  
-                  {/* Actions */}
-                  <div className="pt-4 border-t border-gray-200">
-                    <button
-                      onClick={() => handleDeleteReport(selectedReport)}
-                      className="w-full py-2.5 bg-red-50 text-red-700 border border-red-200 rounded-lg hover:bg-red-100 flex items-center justify-center"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete Report
-                    </button>
-                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Eye className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">Select a Report</h4>
-                  <p className="text-gray-500">
-                    Click on any report from the list to view detailed information here.
-                  </p>
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Trash2 className="w-6 h-6 text-red-600" />
-            </div>
-            
-            <h3 className="text-xl font-bold text-gray-900 text-center mb-2">Delete Report</h3>
-            <p className="text-gray-600 text-center mb-6">
-              Are you sure you want to delete this report? This action cannot be undone.
-            </p>
-            
-            {reportToDelete && (
-              <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                <p className="font-medium text-gray-900">
-                  {reportToDelete.report_data?.tradeType || "Trade"} - ₹{reportToDelete.report_data?.entryPrice || 0}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  {formatDate(reportToDelete.created_at)}
-                </p>
+      {/* Add/Edit Trade Modal */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className={`rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col ${
+            theme === 'dark'
+              ? 'bg-gray-900 border border-gray-800'
+              : 'bg-white border border-gray-200'
+          }`}>
+            {/* Modal Header */}
+            <div className={`p-6 border-b ${
+              theme === 'dark' ? 'border-gray-800' : 'border-gray-200'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">
+                    {editingTrade ? 'Edit Trade' : 'Add New Trade'}
+                  </h2>
+                  <p className="opacity-75 mt-1">
+                    {editingTrade ? 'Update your trade details' : 'Track a new trading position'}
+                  </p>
+                </div>
+                <button
+                  onClick={resetForm}
+                  className={`p-2 rounded-lg ${
+                    theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  <X className="h-5 w-5" />
+                </button>
               </div>
-            )}
-            
-            <div className="flex justify-center space-x-3">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setReportToDelete(null);
-                }}
-                className="px-6 py-2.5 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDeleteReport}
-                className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700"
-              >
-                Delete Report
-              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto">
+              <form onSubmit={saveTrade} className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Basic Information */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                      <div className={`p-2 rounded-lg ${
+                        theme === 'dark' ? 'bg-blue-500/20' : 'bg-blue-100'
+                      }`}>
+                        <Hash className="h-4 w-4 text-blue-500" />
+                      </div>
+                      Basic Information
+                    </h3>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Symbol *</label>
+                      <input
+                        type="text"
+                        value={formData.symbol}
+                        onChange={(e) => setFormData({ ...formData, symbol: e.target.value.toUpperCase() })}
+                        className={`w-full px-4 py-2 rounded-lg border ${
+                          errors.symbol ? 'border-red-500' : 
+                          theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20'
+                            : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                        } focus:outline-none focus:ring-2`}
+                        placeholder="AAPL, TSLA, BTC"
+                      />
+                      {errors.symbol && (
+                        <p className="text-red-500 text-sm mt-1">{errors.symbol}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Trade Type</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, tradeType: 'BUY' })}
+                          className={`px-4 py-2 rounded-lg transition-all ${
+                            formData.tradeType === 'BUY'
+                              ? 'bg-green-500 text-white'
+                              : theme === 'dark'
+                                ? 'bg-gray-800 hover:bg-gray-700'
+                                : 'bg-gray-100 hover:bg-gray-200'
+                          }`}
+                        >
+                          BUY
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, tradeType: 'SELL' })}
+                          className={`px-4 py-2 rounded-lg transition-all ${
+                            formData.tradeType === 'SELL'
+                              ? 'bg-red-500 text-white'
+                              : theme === 'dark'
+                                ? 'bg-gray-800 hover:bg-gray-700'
+                                : 'bg-gray-100 hover:bg-gray-200'
+                          }`}
+                        >
+                          SELL
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Status</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, status: 'OPEN' })}
+                          className={`px-4 py-2 rounded-lg transition-all ${
+                            formData.status === 'OPEN'
+                              ? 'bg-blue-500 text-white'
+                              : theme === 'dark'
+                                ? 'bg-gray-800 hover:bg-gray-700'
+                                : 'bg-gray-100 hover:bg-gray-200'
+                          }`}
+                        >
+                          OPEN
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, status: 'CLOSED' })}
+                          className={`px-4 py-2 rounded-lg transition-all ${
+                            formData.status === 'CLOSED'
+                              ? 'bg-gray-600 text-white'
+                              : theme === 'dark'
+                                ? 'bg-gray-800 hover:bg-gray-700'
+                                : 'bg-gray-100 hover:bg-gray-200'
+                          }`}
+                        >
+                          CLOSED
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Entry Details */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                      <div className={`p-2 rounded-lg ${
+                        theme === 'dark' ? 'bg-green-500/20' : 'bg-green-100'
+                      }`}>
+                        <TrendingUp className="h-4 w-4 text-green-500" />
+                      </div>
+                      Entry Details
+                    </h3>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Entry Price *</label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={formData.entryPrice}
+                        onChange={(e) => setFormData({ ...formData, entryPrice: e.target.value })}
+                        className={`w-full px-4 py-2 rounded-lg border ${
+                          errors.entryPrice ? 'border-red-500' : 
+                          theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20'
+                            : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                        } focus:outline-none focus:ring-2`}
+                        placeholder="0.00"
+                      />
+                      {errors.entryPrice && (
+                        <p className="text-red-500 text-sm mt-1">{errors.entryPrice}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Quantity *</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.quantity}
+                        onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                        className={`w-full px-4 py-2 rounded-lg border ${
+                          errors.quantity ? 'border-red-500' : 
+                          theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20'
+                            : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                        } focus:outline-none focus:ring-2`}
+                        placeholder="0"
+                      />
+                      {errors.quantity && (
+                        <p className="text-red-500 text-sm mt-1">{errors.quantity}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Entry Date *</label>
+                      <input
+                        type="date"
+                        value={formData.entryDate}
+                        onChange={(e) => setFormData({ ...formData, entryDate: e.target.value })}
+                        className={`w-full px-4 py-2 rounded-lg border ${
+                          errors.entryDate ? 'border-red-500' : 
+                          theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20'
+                            : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                        } focus:outline-none focus:ring-2`}
+                      />
+                      {errors.entryDate && (
+                        <p className="text-red-500 text-sm mt-1">{errors.entryDate}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Exit Details */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                      <div className={`p-2 rounded-lg ${
+                        theme === 'dark' ? 'bg-red-500/20' : 'bg-red-100'
+                      }`}>
+                        <TrendingDown className="h-4 w-4 text-red-500" />
+                      </div>
+                      Exit Details
+                    </h3>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Exit Price</label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={formData.exitPrice}
+                        onChange={(e) => setFormData({ ...formData, exitPrice: e.target.value })}
+                        className={`w-full px-4 py-2 rounded-lg border ${
+                          errors.exitPrice ? 'border-red-500' : 
+                          theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20'
+                            : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                        } focus:outline-none focus:ring-2`}
+                        placeholder="0.00"
+                      />
+                      {errors.exitPrice && (
+                        <p className="text-red-500 text-sm mt-1">{errors.exitPrice}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Exit Date</label>
+                      <input
+                        type="date"
+                        value={formData.exitDate}
+                        onChange={(e) => setFormData({ ...formData, exitDate: e.target.value })}
+                        className={`w-full px-4 py-2 rounded-lg border ${
+                          errors.exitDate ? 'border-red-500' : 
+                          theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20'
+                            : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                        } focus:outline-none focus:ring-2`}
+                      />
+                      {errors.exitDate && (
+                        <p className="text-red-500 text-sm mt-1">{errors.exitDate}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Exit Reason</label>
+                      <input
+                        type="text"
+                        value={formData.exitReason}
+                        onChange={(e) => setFormData({ ...formData, exitReason: e.target.value })}
+                        className={`w-full px-4 py-2 rounded-lg border ${
+                          theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20'
+                            : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                        } focus:outline-none focus:ring-2`}
+                        placeholder="Why did you exit?"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Risk Management */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                      <div className={`p-2 rounded-lg ${
+                        theme === 'dark' ? 'bg-yellow-500/20' : 'bg-yellow-100'
+                      }`}>
+                        <Shield className="h-4 w-4 text-yellow-500" />
+                      </div>
+                      Risk Management
+                    </h3>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Stop Loss</label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={formData.stopLoss}
+                        onChange={(e) => setFormData({ ...formData, stopLoss: e.target.value })}
+                        className={`w-full px-4 py-2 rounded-lg border ${
+                          theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20'
+                            : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                        } focus:outline-none focus:ring-2`}
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Target</label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={formData.target}
+                        onChange={(e) => setFormData({ ...formData, target: e.target.value })}
+                        className={`w-full px-4 py-2 rounded-lg border ${
+                          theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20'
+                            : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                        } focus:outline-none focus:ring-2`}
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Risk Amount</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.riskAmount}
+                        onChange={(e) => setFormData({ ...formData, riskAmount: e.target.value })}
+                        className={`w-full px-4 py-2 rounded-lg border ${
+                          theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20'
+                            : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                        } focus:outline-none focus:ring-2`}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Psychology */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                      <div className={`p-2 rounded-lg ${
+                        theme === 'dark' ? 'bg-purple-500/20' : 'bg-purple-100'
+                      }`}>
+                        <Brain className="h-4 w-4 text-purple-500" />
+                      </div>
+                      Psychology
+                    </h3>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Emotion</label>
+                      <select
+                        value={formData.emotion}
+                        onChange={(e) => setFormData({ ...formData, emotion: e.target.value })}
+                        className={`w-full px-4 py-2 rounded-lg border ${
+                          theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20'
+                            : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                        } focus:outline-none focus:ring-2`}
+                      >
+                        <option value="neutral">Neutral</option>
+                        <option value="confident">Confident</option>
+                        <option value="calm">Calm</option>
+                        <option value="anxious">Anxious</option>
+                        <option value="fearful">Fearful</option>
+                        <option value="greedy">Greedy</option>
+                        <option value="frustrated">Frustrated</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Confidence Level: {formData.confidence}/10
+                      </label>
+                      <input
+                        type="range"
+                        min="1"
+                        max="10"
+                        value={formData.confidence}
+                        onChange={(e) => setFormData({ ...formData, confidence: parseInt(e.target.value) })}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs mt-1">
+                        <span>Low</span>
+                        <span>High</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Market Condition</label>
+                      <select
+                        value={formData.marketCondition}
+                        onChange={(e) => setFormData({ ...formData, marketCondition: e.target.value })}
+                        className={`w-full px-4 py-2 rounded-lg border ${
+                          theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20'
+                            : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                        } focus:outline-none focus:ring-2`}
+                      >
+                        <option value="normal">Normal</option>
+                        <option value="volatile">Volatile</option>
+                        <option value="trending">Trending</option>
+                        <option value="ranging">Ranging</option>
+                        <option value="breaking-out">Breaking Out</option>
+                        <option value="breaking-down">Breaking Down</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Additional Info */}
+                  <div className="space-y-4 lg:col-span-2">
+                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                      <div className={`p-2 rounded-lg ${
+                        theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'
+                      }`}>
+                        <BookOpen className="h-4 w-4" />
+                      </div>
+                      Additional Information
+                    </h3>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Tags (comma separated)</label>
+                      <input
+                        type="text"
+                        value={Array.isArray(formData.tags) ? formData.tags.join(', ') : formData.tags}
+                        onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                        className={`w-full px-4 py-2 rounded-lg border ${
+                          theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20'
+                            : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                        } focus:outline-none focus:ring-2`}
+                        placeholder="momentum, breakout, earnings"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Strategy</label>
+                      <input
+                        type="text"
+                        value={formData.strategy}
+                        onChange={(e) => setFormData({ ...formData, strategy: e.target.value })}
+                        className={`w-full px-4 py-2 rounded-lg border ${
+                          theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20'
+                            : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                        } focus:outline-none focus:ring-2`}
+                        placeholder="Your trading strategy"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Notes & Lessons Learned</label>
+                      <textarea
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        rows={4}
+                        className={`w-full px-4 py-2 rounded-lg border ${
+                          theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20'
+                            : 'bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                        } focus:outline-none focus:ring-2`}
+                        placeholder="What went well? What could be improved? Key takeaways..."
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Preview Card */}
+                <div className={`mt-6 p-4 rounded-lg ${
+                  theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-50'
+                }`}>
+                  <h4 className="font-semibold mb-3">Trade Preview</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <div className="text-sm opacity-75">Symbol</div>
+                      <div className="font-medium">{formData.symbol || '-'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm opacity-75">Type</div>
+                      <div className={`font-medium ${
+                        formData.tradeType === 'BUY' ? 'text-green-500' : 'text-red-500'
+                      }`}>
+                        {formData.tradeType || '-'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm opacity-75">Quantity</div>
+                      <div className="font-medium">{formData.quantity || '-'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm opacity-75">Risk/Reward</div>
+                      <div className="font-medium">
+                        {formData.stopLoss && formData.target 
+                          ? calculateRiskRewardRatio(formData).toFixed(2)
+                          : '-'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className="mt-8 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className={`px-6 py-2 rounded-lg border ${
+                      theme === 'dark'
+                        ? 'border-gray-700 hover:bg-gray-800'
+                        : 'border-gray-300 hover:bg-gray-100'
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className={`px-6 py-2 rounded-lg flex items-center gap-2 ${
+                      theme === 'dark'
+                        ? 'bg-blue-600 hover:bg-blue-700'
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
+                    <Save className="h-4 w-4" />
+                    {editingTrade ? 'Update Trade' : 'Save Trade'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
       )}
+
+ {/* Settings Modal */}
+{showSettings && (
+  <div className="overflow-x-hidden inset-0 z-50 overflow-y-auto">
+    {/* Backdrop */}
+    <div 
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300"
+      onClick={() => setShowSettings(false)}
+    />
+    
+    {/* Modal Container */}
+    <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
+      <div 
+        className={`
+          relative w-full max-w-lg sm:max-w-xl md:max-w-2xl
+          rounded-xl sm:rounded-2xl shadow-2xl
+          transform transition-all duration-300 ease-out
+          ${theme === 'dark'
+            ? 'bg-gray-900 border border-gray-700'  // Changed to darker bg
+            : 'bg-white border border-gray-200'
+          }
+          my-4 sm:my-8
+        `}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-10 p-4 sm:p-6 border-b border-gray-300 dark:border-gray-700 bg-inherit">
+          <div className="flex items-center justify-between">
+            <h2 className={`
+              text-xl sm:text-2xl font-bold
+              ${theme === 'dark' ? 'text-white' : 'text-gray-900'}
+            `}>
+              Settings
+            </h2>
+            <button
+              onClick={() => setShowSettings(false)}
+              className={`
+                p-1.5 sm:p-2 rounded-lg transition-colors duration-200
+                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+                ${theme === 'dark'
+                  ? 'hover:bg-gray-800 text-gray-300'
+                  : 'hover:bg-gray-100 text-gray-600'
+                }
+              `}
+              aria-label="Close settings"
+            >
+              <X className="h-5 w-5 sm:h-6 sm:w-6" />
+            </button>
+          </div>
+        </div>
+
+        {/* Scrollable Content Area */}
+        <div className="overflow-y-auto max-h-[calc(100vh-12rem)] sm:max-h-[calc(100vh-10rem)] md:max-h-[calc(100vh-8rem)]">
+          <div className="p-4 sm:p-6 space-y-6">
+            {/* Display Settings */}
+            <div>
+              <h3 className={`
+                font-semibold text-lg mb-4
+                ${theme === 'dark' ? 'text-white' : 'text-gray-900'}
+              `}>
+                Display Settings
+              </h3>
+              <div className="space-y-4 sm:space-y-6">
+                {/* Dark Mode Toggle */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+                  <div className="flex-1">
+                    <div className={`
+                      font-medium
+                      ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}
+                    `}>
+                      Dark Mode
+                    </div>
+                    <div className={`
+                      text-sm
+                      ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+                    `}>
+                      Switch between light and dark themes
+                    </div>
+                  </div>
+                  <button
+                    onClick={toggleTheme}
+                    className={`
+                      w-14 h-7 sm:w-16 sm:h-8 rounded-full relative transition-colors flex-shrink-0
+                      ${theme === 'dark' ? 'bg-blue-600' : 'bg-gray-300'}
+                    `}
+                    aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                  >
+                    <div className={`
+                      w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white absolute top-0.5 transition-transform duration-300
+                      ${theme === 'dark' ? 'translate-x-7 sm:translate-x-8' : 'translate-x-0.5'}
+                    `} />
+                  </button>
+                </div>
+
+                {/* Currency Selector */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+                  <div className="flex-1">
+                    <div className={`
+                      font-medium
+                      ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}
+                    `}>
+                      Currency
+                    </div>
+                    <div className={`
+                      text-sm
+                      ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}
+                    `}>
+                      Display currency for all values
+                    </div>
+                  </div>
+                  <select
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value)}
+                    className={`
+                      w-full sm:w-48 px-3 py-2 sm:py-1.5 rounded-lg border text-sm sm:text-base
+                      transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                      ${theme === 'dark'
+                        ? 'bg-gray-800 border-gray-700 text-white'
+                        : 'bg-white border-gray-300 text-gray-900'
+                      }
+                    `}
+                  >
+                    <option value="USD" className="bg-white text-gray-900 dark:bg-gray-800 dark:text-white">USD ($)</option>
+                    <option value="EUR" className="bg-white text-gray-900 dark:bg-gray-800 dark:text-white">EUR (€)</option>
+                    <option value="GBP" className="bg-white text-gray-900 dark:bg-gray-800 dark:text-white">GBP (£)</option>
+                    <option value="INR" className="bg-white text-gray-900 dark:bg-gray-800 dark:text-white">INR (₹)</option>
+                    <option value="JPY" className="bg-white text-gray-900 dark:bg-gray-800 dark:text-white">JPY (¥)</option>
+                    <option value="CAD" className="bg-white text-gray-900 dark:bg-gray-800 dark:text-white">CAD (C$)</option>
+                    <option value="AUD" className="bg-white text-gray-900 dark:bg-gray-800 dark:text-white">AUD (A$)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Performance Goals */}
+            <div>
+              <h3 className={`
+                font-semibold text-lg mb-4
+                ${theme === 'dark' ? 'text-white' : 'text-gray-900'}
+              `}>
+                Performance Goals
+              </h3>
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Monthly Profit Target */}
+                  <div>
+                    <label className={`
+                      block text-sm font-medium mb-2
+                      ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}
+                    `}>
+                      Monthly Profit Target
+                    </label>
+                    <div className="relative">
+                      <span className={`
+                        absolute left-3 top-1/2 transform -translate-y-1/2
+                        ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}
+                      `}>
+                        {currency === 'USD' ? '$' : 
+                         currency === 'EUR' ? '€' : 
+                         currency === 'GBP' ? '£' : 
+                         currency === 'INR' ? '₹' : 
+                         currency === 'JPY' ? '¥' : 
+                         currency === 'CAD' ? 'C$' : 'A$'}
+                      </span>
+                      <input
+                        type="number"
+                        value={performanceGoals.monthlyProfitTarget}
+                        onChange={(e) => setPerformanceGoals({...performanceGoals, monthlyProfitTarget: parseFloat(e.target.value) || 0})}
+                        className={`
+                          w-full pl-8 pr-3 py-2 sm:py-2.5 rounded-lg border text-sm sm:text-base
+                          transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                          ${theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400'
+                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                          }
+                        `}
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Win Rate Target */}
+                  <div>
+                    <label className={`
+                      block text-sm font-medium mb-2
+                      ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}
+                    `}>
+                      Win Rate Target (%)
+                    </label>
+                    <div className="relative">
+                      <span className={`
+                        absolute right-3 top-1/2 transform -translate-y-1/2
+                        ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}
+                      `}>
+                        %
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={performanceGoals.winRateTarget}
+                        onChange={(e) => setPerformanceGoals({...performanceGoals, winRateTarget: parseFloat(e.target.value) || 0})}
+                        className={`
+                          w-full px-3 pr-10 py-2 sm:py-2.5 rounded-lg border text-sm sm:text-base
+                          transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                          ${theme === 'dark'
+                            ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400'
+                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                          }
+                        `}
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Trades Per Month */}
+                  <div className="sm:col-span-2 lg:col-span-1">
+                    <label className={`
+                      block text-sm font-medium mb-2
+                      ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}
+                    `}>
+                      Trades Per Month
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={performanceGoals.tradesPerMonth}
+                      onChange={(e) => setPerformanceGoals({...performanceGoals, tradesPerMonth: parseInt(e.target.value) || 1})}
+                      className={`
+                        w-full px-3 py-2 sm:py-2.5 rounded-lg border text-sm sm:text-base
+                        transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                        ${theme === 'dark'
+                          ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400'
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                        }
+                      `}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Data Management */}
+            <div>
+              <h3 className={`
+                font-semibold text-lg mb-4
+                ${theme === 'dark' ? 'text-white' : 'text-gray-900'}
+              `}>
+                Data Management
+              </h3>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <button
+                    onClick={exportTrades}
+                    className={`
+                      px-4 py-3 sm:py-3.5 rounded-lg flex items-center justify-center gap-2 sm:gap-3
+                      transition-all duration-200 font-medium text-sm sm:text-base
+                      hover:scale-[1.02] active:scale-[0.98]
+                      ${theme === 'dark'
+                        ? 'bg-gray-800 hover:bg-gray-700 text-gray-100'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                      }
+                    `}
+                  >
+                    <Download className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Export Data
+                  </button>
+                  <label className={`
+                    px-4 py-3 sm:py-3.5 rounded-lg flex items-center justify-center gap-2 sm:gap-3
+                    transition-all duration-200 font-medium text-sm sm:text-base cursor-pointer
+                    hover:scale-[1.02] active:scale-[0.98]
+                    ${theme === 'dark'
+                      ? 'bg-gray-800 hover:bg-gray-700 text-gray-100'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                    }
+                  `}>
+                    <input
+                      type="file"
+                      accept=".json,.csv"
+                      onChange={importTrades}
+                      className="hidden"
+                    />
+                    <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Import Data
+                  </label>
+                </div>
+
+                {/* Clear All Data */}
+                <button
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+                      localStorage.removeItem('trading-journal-pro-trades');
+                      setTrades([]);
+                      setShowSettings(false);
+                      showNotification('success', 'All data cleared successfully');
+                    }
+                  }}
+                  className={`
+                    w-full px-4 py-3 sm:py-3.5 rounded-lg flex items-center justify-center gap-2 sm:gap-3
+                    transition-all duration-200 font-medium text-sm sm:text-base
+                    hover:scale-[1.02] active:scale-[0.98]
+                    ${theme === 'dark'
+                      ? 'bg-red-900/30 hover:bg-red-900/50 text-red-300'
+                      : 'bg-red-50 hover:bg-red-100 text-red-600'
+                    }
+                  `}
+                >
+                  <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                  Clear All Data
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Optional Footer */}
+        <div className="p-4 sm:p-6 border-t border-gray-300 dark:border-gray-700">
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowSettings(false)}
+              className={`
+                px-4 py-2 rounded-lg font-medium transition-colors
+                ${theme === 'dark'
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }
+              `}
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+      {/* Help Modal */}
+      {showHelp && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className={`rounded-2xl w-full max-w-2xl ${
+            theme === 'dark'
+              ? 'bg-gray-900 border border-gray-800'
+              : 'bg-white border border-gray-200'
+          }`}>
+            <div className="p-6 border-b border-gray-800">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <HelpCircle className="h-6 w-6" />
+                  Help & Documentation
+                </h2>
+                <button
+                  onClick={() => setShowHelp(false)}
+                  className={`p-2 rounded-lg ${
+                    theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className={`p-4 rounded-lg ${
+                theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
+              }`}>
+                <h3 className="font-semibold mb-2">Getting Started</h3>
+                <p className="text-sm opacity-75 mb-2">
+                  Add your first trade by clicking the "Add Trade" button. Fill in all required fields
+                  and use the additional fields to track your psychology and strategy.
+                </p>
+                <p className="text-sm opacity-75">
+                  All data is stored locally in your browser - no login required!
+                </p>
+              </div>
+              <div className={`p-4 rounded-lg ${
+                theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
+              }`}>
+                <h3 className="font-semibold mb-2">Understanding Metrics</h3>
+                <ul className="text-sm opacity-75 space-y-1">
+                  <li>• <strong>Profit Factor</strong>: Total profits / Total losses (aim for &gt; 1.5)</li>
+                  <li>• <strong>Sharpe Ratio</strong>: Risk-adjusted returns (higher is better)</li>
+                  <li>• <strong>Max Drawdown</strong>: Largest peak-to-trough decline</li>
+                  <li>• <strong>Consistency Score</strong>: How consistent your returns are</li>
+                  <li>• <strong>Win Rate</strong>: Percentage of winning trades</li>
+                </ul>
+              </div>
+              <div className={`p-4 rounded-lg ${
+                theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
+              }`}>
+                <h3 className="font-semibold mb-2">Tips for Better Analysis</h3>
+                <ul className="text-sm opacity-75 space-y-1">
+                  <li>• Add detailed notes for each trade</li>
+                  <li>• Track your emotions and market conditions</li>
+                  <li>• Use tags to categorize trades</li>
+                  <li>• Set realistic performance goals</li>
+                  <li>• Export your data regularly for backup</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className={`border-t ${
+        theme === 'dark' ? 'border-gray-400 bg-gray-400' : 'border-gray-200 bg-white'
+      }`}>
+        <div className="max-w-8xl mx-auto px-4 py-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-blue-500" />
+                <span className="font-medium">Trading Journal Pro</span>
+              </div>
+              <div className="text-sm opacity-75">
+                {trades.length} trades • Free • No login required
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setShowHelp(true)}
+                className="text-sm hover:opacity-75"
+              >
+                Help
+              </button>
+              <button
+                onClick={() => setShowSettings(true)}
+                className="text-sm hover:opacity-75"
+              >
+                Settings
+              </button>
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  showNotification('info', 'Data stored locally in your browser');
+                }}
+                className="text-sm hover:opacity-75"
+              >
+                Privacy
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        [data-theme="dark"] {
+          color-scheme: dark;
+        }
+        input[type="range"] {
+          -webkit-appearance: none;
+          height: 6px;
+          border-radius: 3px;
+          background: ${theme === 'dark' ? '#374151' : '#E5E7EB'};
+          outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: ${theme === 'dark' ? '#3B82F6' : '#2563EB'};
+          cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: ${theme === 'dark' ? '#3B82F6' : '#2563EB'};
+          cursor: pointer;
+          border: none;
+        }
+      `}</style>
     </div>
   );
 };
 
-export default PremiumJournal;
+export default TradingJournalPro;

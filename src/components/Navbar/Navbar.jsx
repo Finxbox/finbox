@@ -129,7 +129,7 @@ const Navbar = () => {
                   <Link to="/position-size-calculator" className="block px-5 py-3 hover:bg-gray-50">
                     Position Size Calculator
                   </Link>
-                    <Link to="/trading-journal" className="block px-5 py-3 hover:bg-gray-50">
+                    <Link to="/premiumjournal" className="block px-5 py-3 hover:bg-gray-50">
                     Trading Journal
                   </Link>
                 </div>

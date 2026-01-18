@@ -49,13 +49,14 @@ const App = () => {
             path="/portfolio-calculator"
             element={<PortfolioCalculator />}
           />
+          <Route path="/trading-journal" element={<PremiumJournal />} />
           <Route
             path="/position-size-calculator"
             element={<PositionSizeCalculator />}
           />
         </Route>
 
-        <Route path="/trading-journal" element={<PremiumJournal />} />
+        
 
         {/* STORE / COURSES */}
         <Route element={<StoreLayout />}>

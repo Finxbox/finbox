@@ -6,8 +6,8 @@ import { FaBars, FaTimes } from "react-icons/fa";
 
 import { supabase } from "../../lib/supabase";
 
-const Navbar = () => {
-  const { openSignIn } = useClerk();
+ const Navbar = ({ onOpenSettings }) => {
+    const { openSignIn } = useClerk();
   const { user, isSignedIn, isLoaded } = useUser();
 
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -129,7 +129,7 @@ const Navbar = () => {
                   <Link to="/position-size-calculator" className="block px-5 py-3 hover:bg-gray-50">
                     Position Size Calculator
                   </Link>
-                    <Link to="/premiumjournal" className="block px-5 py-3 hover:bg-gray-50">
+                    <Link to="/tradingjournal" className="block px-5 py-3 hover:bg-gray-50">
                     Trading Journal
                   </Link>
                 </div>
@@ -179,7 +179,12 @@ const Navbar = () => {
                   Blog
                 </a>
               </li>
-
+<button
+  onClick={onOpenSettings}
+  className="hover:text-[#694F8E] transition"
+>
+  ⚙ Settings
+</button>
               <li>
                 {user ? (
                   <UserButton />

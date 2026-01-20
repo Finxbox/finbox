@@ -109,7 +109,7 @@ import {
   Treemap,
 } from "recharts";
 
-const TradingJournalPro = () => {
+const TradingJournal = () => {
   // Theme state
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -1016,7 +1016,7 @@ const TradingJournalPro = () => {
         : 'bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 text-gray-900'
     }`}>
       {/* Top Navigation */}
-      <nav className={`sticky top-0 z-50 border-b ${
+      <nav className={` border-b ${
         theme === 'dark' 
           ? 'bg-gray-800/90 backdrop-blur-md border-gray-700'
           : 'bg-white/90 backdrop-blur-md border-gray-200'
@@ -1032,7 +1032,7 @@ const TradingJournalPro = () => {
               </div>
               <div>
                 <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Trading Journal Pro
+                  Trading Journal
                 </h1>
                 <p className="text-xs opacity-75">Free • Unlimited • No Login Required</p>
               </div>
@@ -3286,4 +3286,4 @@ const TradingJournalPro = () => {
   );
 };
 
-export default TradingJournalPro;
+export default TradingJournal;

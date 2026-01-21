@@ -3,7 +3,7 @@ import Seo from "../components/Seo";
 const CookiePolicy = () => {
   return (
     <div className="max-w-6xl mx-auto px-6 py-12 text-gray-800 leading-relaxed">
-      <SEO title="Cookie Policy - Finxbox" description="Learn about Finxbox's Cookie Policy, including the types of cookies used and how we handle your data." />
+      <Seo title="Cookie Policy - Finxbox" description="Learn about Finxbox's Cookie Policy, including the types of cookies used and how we handle your data." />
       <h1 className="text-3xl font-bold mb-2">Cookie Policy</h1>
       <p className="text-sm text-gray-500 mb-8">
         Last updated: {new Date().toLocaleDateString()}

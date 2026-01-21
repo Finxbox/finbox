@@ -1,4 +1,6 @@
 import React from "react";
+import Seo from "../components/Seo";
+import { SEO_CONFIG } from "../../src/seo/constants/seo-config.js";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Plus,
@@ -110,6 +112,16 @@ import {
 } from "recharts";
 
 const TradingJournal = () => {
+  <>
+  <Seo 
+        title={SEO_CONFIG.TRADING_JOURNAL.title}
+        description={SEO_CONFIG.TRADING_JOURNAL.description}
+        keywords={SEO_CONFIG.TRADING_JOURNAL.keywords}
+        canonicalPath={SEO_CONFIG.TRADING_JOURNAL.canonicalPath}
+      />
+      
+      <h1>{SEO_CONFIG.TRADING_JOURNAL.h1}</h1></>
+      
   // Theme state
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {

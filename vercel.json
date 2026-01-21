@@ -6,30 +6,13 @@
         { "type": "host", "value": "www.finxbox.com" }
       ],
       "destination": "https://finxbox.com/$1",
-      "permanent": true
-    },
-    {
-      "source": "/(.*)",
-      "has": [
-        { "type": "protocol", "value": "http" }
-      ],
-      "destination": "https://finxbox.com/$1",
-      "permanent": true
+      "statusCode": 301
     }
   ],
   "rewrites": [
-    {
-      "source": "/sitemap.xml",
-      "destination": "/sitemap.xml"
-    },
-    {
-      "source": "/robots.txt",
-      "destination": "/robots.txt"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
+    { "source": "/robots.txt", "destination": "/robots.txt" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {

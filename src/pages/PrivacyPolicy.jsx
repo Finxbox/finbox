@@ -48,6 +48,13 @@ const PrivacyPolicy = () => {
           Finxbox does <strong>not</strong> store card details, bank information,
           or sensitive payment credentials.
         </p>
+<br />
+         <strong>Analytics & Experience Improvement</strong>
+      <br />
+      We use Microsoft Clarity to understand how visitors interact with our
+      website. This helps us improve user experience and website performance. By
+      using this site, you agree that we and Microsoft may collect and use this
+      data. 
       </section>
 
       {/* How Tools Work */}

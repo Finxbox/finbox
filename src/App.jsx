@@ -19,6 +19,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import CookiePolicy from "./pages/CookiePolicy";
 import ContactUs from "./pages/ContactUs";
+import NotFound from "./pages/NotFound";
 
 import Analytics from "./components/Analytics";
 import { SettingsProvider } from "./context/settingscontext";
@@ -70,6 +71,7 @@ const App = () => {
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
             <Route path="/cookie-policy" element={<CookiePolicy />} />
             <Route path="/contact-us" element={<ContactUs />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
 
         </Routes>

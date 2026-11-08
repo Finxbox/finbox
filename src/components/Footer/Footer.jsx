@@ -21,10 +21,6 @@ const Footer = () => {
               <strong>GSTIN:</strong> 33DIQPA6990G1ZZ 
               </p>
             <p>
-              <strong>Registered Address:</strong>  
-              3/23a nethaji 2nd street,ramapuram,chennai-600089,Tamil Nadu,India
-            </p>
-            <p>
               <strong>Email:</strong> info.finxbox@gmail.com</p>
             <p><strong>Phone:</strong> +91-7305492860</p>
             <p className="mt-2">

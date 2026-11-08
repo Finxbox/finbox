@@ -5,73 +5,6 @@ import Testimonials from "../components/utility/Testimonials";
 import FAQ from "../components/utility/FAQ";
 import Seo from "../components/Seo";
 
-{/* ================= SEO CONTENT – COURSE PAGE ================= */}
-
-
-<section className="max-w-6xl mx-auto px-6 py-20 text-gray-700">
-  <Seo
-    title="Stock Market Courses - Learn Trading with Finxbox"
-    description="Explore Finxbox's stock market courses designed for traders and investors. Learn price action, technical analysis, and trading strategies with expert mentors."
-  /> 
-  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-    Stock Market Courses Designed for Practical Learning
-  </h2>
-
-  <p className="mb-6 max-w-4xl">
-    Finxbox offers structured stock market courses and trading bootcamps
-    designed to help traders and investors build clarity, confidence,
-    and discipline in real market conditions. Our courses focus on
-    practical understanding rather than theory alone, making them
-    suitable for beginners as well as experienced market participants.
-  </p>
-
-  <p className="mb-6 max-w-4xl">
-    Each Finxbox course is curated by industry mentors with real-world
-    trading and investing experience. From technical analysis and
-    candlestick patterns to volume analysis and financial fundamentals,
-    our learning programs cover essential concepts required to
-    understand and participate in the stock market effectively.
-  </p>
-
-  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-    Who Should Enroll in Finxbox Courses?
-  </h2>
-
-  <p className="mb-6 max-w-4xl">
-    Finxbox courses are ideal for beginners who want a structured
-    introduction to stock market trading, as well as intermediate
-    traders looking to refine their strategies and improve consistency.
-    If you are interested in understanding price action, market trends,
-    volume behavior, or financial statements, our courses provide a
-    guided learning path.
-  </p>
-
-  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-    Learn with Experienced Market Mentors
-  </h2>
-
-  <p className="mb-6 max-w-4xl">
-    All courses on Finxbox are delivered by experienced mentors who
-    actively work in the financial markets. Live sessions, structured
-    modules, and practical examples ensure that learners gain applicable
-    knowledge rather than theoretical concepts alone.
-  </p>
-
-  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-    Build Strong Trading Foundations
-  </h2>
-
-  <p className="max-w-4xl">
-    The goal of Finxbox courses is not to promise shortcuts or guaranteed
-    profits, but to help learners develop strong foundations in risk
-    management, market understanding, and disciplined decision-making.
-    With the right education, traders and investors can approach the
-    markets with greater confidence and structure.
-  </p>
-
-</section>
-
-
 const CoursePage = () => {
   const { courseId } = useParams();
   const course = courses.find(c => c.id === courseId);
@@ -86,6 +19,10 @@ const CoursePage = () => {
 
   return (
     <div className="min-h-screen bg-[#FAFAFB]">
+      <Seo
+        title={`${course.title.trim()} | Finxbox Courses`}
+        description="Explore Finxbox's stock market courses designed for traders and investors. Learn price action, technical analysis, and trading strategies with expert mentors."
+      />
 
       {/* ================= HERO ================= */}
       <section className="relative overflow-hidden border-b border-gray-200">

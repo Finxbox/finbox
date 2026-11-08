@@ -112,16 +112,6 @@ import {
 } from "recharts";
 
 const TradingJournal = () => {
-  <>
-  <Seo 
-        title={SEO_CONFIG.TRADING_JOURNAL.title}
-        description={SEO_CONFIG.TRADING_JOURNAL.description}
-        keywords={SEO_CONFIG.TRADING_JOURNAL.keywords}
-        canonicalPath={SEO_CONFIG.TRADING_JOURNAL.canonicalPath}
-      />
-      
-      <h1>{SEO_CONFIG.TRADING_JOURNAL.h1}</h1></>
-      
   // Theme state
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -1027,6 +1017,11 @@ const TradingJournal = () => {
         ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100'
         : 'bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 text-gray-900'
     }`}>
+      <Seo
+        title={SEO_CONFIG.TRADING_JOURNAL.title}
+        description={SEO_CONFIG.TRADING_JOURNAL.description}
+        keywords={SEO_CONFIG.TRADING_JOURNAL.keywords}
+      />
       {/* Top Navigation */}
       <nav className={` border-b ${
         theme === 'dark' 
@@ -1071,7 +1066,7 @@ const TradingJournal = () => {
             </div>
 
             {/* Right Actions */}
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2">
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
@@ -3265,7 +3260,7 @@ const TradingJournal = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         [data-theme="dark"] {
           color-scheme: dark;
         }

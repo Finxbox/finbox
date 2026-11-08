@@ -7,6 +7,7 @@ const Seo = ({
   title = "Finxbox – Financial Tools & Premium Software",
   description = "Finxbox provides financial tools, calculators, and premium software features for traders and investors.",
   robots = "index, follow",
+  keywords,
 }) => {
   const location = useLocation();
 
@@ -18,6 +19,7 @@ const Seo = ({
       <title>{title}</title>
 
       <meta name="description" content={description} />
+      {keywords && <meta name="keywords" content={keywords} />}
       <meta name="robots" content={robots} />
 
       {/* AUTO CANONICAL */}

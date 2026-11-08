@@ -23,7 +23,7 @@ const DematCTA = () => {
         {/* ACTIONS */}
         <div className="flex items-center gap-3">
           <a
-            href="https://upstox.com/open-account/?f=GXP7"
+            href="https://mosl.co/MOSWEB/IiWJnEv7mk"
             target="_blank"
             rel="noopener noreferrer"
             className="whitespace-nowrap rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-[#694F8E] hover:scale-[1.03] transition"

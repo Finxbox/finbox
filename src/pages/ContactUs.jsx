@@ -1,6 +1,12 @@
+import Seo from "../components/Seo";
+
 const ContactUs = () => {
   return (
     <div className="max-w-5xl mx-auto px-6 py-12 text-gray-800">
+      <Seo
+        title="Contact Us – Finxbox"
+        description="Get in touch with the Finxbox team for questions, support or feedback about our financial tools and courses."
+      />
       <h1 className="text-3xl font-bold mb-4">Contact Us</h1>
       <p className="text-gray-600 mb-10">
         We’re here to help. If you have any questions, concerns, or feedback,

@@ -5,12 +5,11 @@ import Seo from "../components/Seo";
 const Courses = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      <seo 
+      <Seo
         title="Courses - Structured Trading Bootcamps"
         description="Explore Finxbox's structured trading bootcamps designed to help you trade with clarity, confidence, and discipline."
-      /> 
-      <meta name="keywords" content="Finxbox courses, trading bootcamps, stock market education, trading courses India, investment courses, trading mentorship, stock market learning, Finxbox learning programs" />
-      <meta name="robots" content="index, follow" />
+        keywords="Finxbox courses, trading bootcamps, stock market education, trading courses India, investment courses, trading mentorship, stock market learning, Finxbox learning programs"
+      />
       <div className="max-w-7xl mx-auto">
 
         {/* HEADER */}

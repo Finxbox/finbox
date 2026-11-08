@@ -4,85 +4,6 @@ import { ShieldCheck, BarChart3, GraduationCap } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import Seo from "../components/Seo";
 
-{/* ================= SEO CONTENT ================= */}
-
-<section className="max-w-6xl mx-auto px-6 py-20 text-gray-700">
- <Seo
-        title="Finxbox – Smart Financial Tools for Traders & Investors"
-        description="Finxbox is a modern financial platform built for traders and investors who want clarity, discipline, and data-driven decision-making. We provide powerful yet simple financial tools that help you analyze performance, manage risk, and improve consistency in trading and investing."
-      />
-      <meta name="keywords" content="Finxbox, financial tools, trading tools, investment tools, risk management, portfolio calculator, position size calculator, trading education, stock market tools, Indian stock market, trading discipline, data-driven investing" />
-      <meta robots="index, follow" />
-  <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-    Finxbox – Smart Financial Tools for Traders & Investors
-  </h1>
-
-  <p className="text-lg mb-6 max-w-4xl">
-    Finxbox is a modern financial platform built for traders and investors
-    who want clarity, discipline, and data-driven decision-making.
-    We provide powerful yet simple financial tools that help you analyze
-    performance, manage risk, and improve consistency in trading and investing.
-  </p>
-
-  <p className="text-lg mb-10 max-w-4xl">
-    Whether you are a beginner learning the basics or an experienced trader
-    refining strategies, Finxbox helps you move away from guesswork and
-    emotional decisions by focusing on numbers, logic, and structure.
-  </p>
-
-  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-    Who Is Finxbox For?
-  </h2>
-
-  <p className="mb-6 max-w-4xl">
-    Finxbox is designed for active traders, long-term investors, and finance
-    enthusiasts who want better control over their financial journey.
-    If you trade equities, derivatives, or manage multiple investment positions,
-    Finxbox gives you the tools to track, evaluate, and optimize your decisions.
-  </p>
-
-  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-    Financial Tools That Focus on Risk & Performance
-  </h2>
-
-  <p className="mb-6 max-w-4xl">
-    Most losses in trading happen due to poor risk management and lack of
-    performance tracking. Finxbox addresses this by offering tools such as
-    position sizing calculators, portfolio analysis, trading journals, and
-    performance dashboards that help you understand what works and what doesn’t.
-  </p>
-
-  <p className="mb-10 max-w-4xl">
-    By using structured data instead of emotions, Finxbox enables traders
-    and investors to build discipline, reduce mistakes, and improve
-    long-term consistency.
-  </p>
-
-  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-    Why Choose Finxbox?
-  </h2>
-
-  <ul className="list-disc pl-6 space-y-2 max-w-4xl mb-10">
-    <li>Simple and practical financial tools</li>
-    <li>Designed for Indian traders and investors</li>
-    <li>Focus on risk management and performance tracking</li>
-    <li>Clean interface with real-world usability</li>
-    <li>Built to support disciplined decision-making</li>
-  </ul>
-
-  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-    Build Better Financial Decisions with Finxbox
-  </h2>
-
-  <p className="max-w-4xl">
-    Finxbox is not about predictions or shortcuts. It is about understanding
-    your numbers, respecting risk, and improving one decision at a time.
-    With the right tools and insights, traders and investors can build
-    sustainable systems instead of relying on luck.
-  </p>
-
-</section>
-
 /* ================= ANIMATION VARIANTS ================= */
 
 const fadeUp = {
@@ -102,6 +23,11 @@ const stagger = {
 const Home = () => {
   return (
     <div className="bg-[#FAFAFB]">
+      <Seo
+        title="Finxbox – Smart Financial Tools for Traders & Investors"
+        description="Finxbox is a modern financial platform built for traders and investors who want clarity, discipline, and data-driven decision-making. Analyze performance, manage risk, and improve consistency in trading and investing."
+        keywords="Finxbox, financial tools, trading tools, investment tools, risk management, portfolio calculator, position size calculator, trading education, stock market tools, Indian stock market, trading discipline, data-driven investing"
+      />
       
       {/* ================= HERO ================= */}
       <section className="relative overflow-hidden">
@@ -198,9 +124,9 @@ const Home = () => {
 
         {/* Logo */}
         <img
-          src="/upstox logo.png"
-          alt="Upstox Official Partner"
-          className="h-28 w-auto mx-auto mb-6 object-contain"
+          src="/motilal-logo.png"
+          alt="Motilal Oswal Official Partner"
+          className="h-28 w-auto mx-auto mb-6 object-contain mix-blend-multiply"
         />
         {/* Partner Description */}
         <p className="mt-3 text-gray-600 max-w-sm mx-auto">
@@ -335,7 +261,7 @@ const Home = () => {
 
       <div className="mt-10 flex gap-4 flex-wrap">
         <a
-          href="https://upstox.com/open-account/?f=GXP7"
+          href="https://mosl.co/MOSWEB/IiWJnEv7mk"
           target="_blank"
           rel="noopener noreferrer"
           className="px-8 py-4 bg-white text-[#694F8E] font-semibold rounded-xl shadow hover:scale-[1.03] transition"
@@ -375,7 +301,7 @@ const Home = () => {
       </div>
 
       <div className="mt-8 border-t pt-6 text-sm text-gray-500">
-        Official partner: <span className="font-medium text-gray-800">Upstox</span><br />
+        Official partner: <span className="font-medium text-gray-800">Motilal Oswal</span><br />
         SEBI-registered Stock Broker
       </div>
     </div>

@@ -641,9 +641,9 @@ const startPayment = async () => {
         {/* Left Column - Calculator */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-200">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-wrap justify-between items-center gap-3 mb-8">
               <h2 className="text-2xl font-bold text-gray-900">Portfolio Configuration</h2>
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={savePortfolio}
                   disabled={loading || !result}
@@ -733,9 +733,9 @@ const startPayment = async () => {
 
             {/* Assets Management */}
             <div className="mb-6">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
                 <h3 className="text-lg font-medium text-gray-700">Asset Allocation</h3>
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <input
                     type="number"
                     min="1"
